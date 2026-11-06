@@ -58,3 +58,108 @@ th{background:#0a3d62;color:#fff}
 <button class="btn-green" onclick="installApp()">📱 INSTALL APP ON PHONE</button>
 <p class="small">Publisher: Select your name (added by Secretary), then submit your monthly report.</p>
 </div>
+<!-- PUBLISHER -->
+<div id="publisherView" class="card hidden">
+<h2>Congregation's Publisher Record</h2>
+<div id="noPublishersMsg" class="hidden"><p class="small">No publishers added yet. Please ask Secretary to add you first.</p></div>
+<div id="publisherMain">
+<label>Select Your Name</label>
+<select id="selectPublisher" onchange="onSelectPublisher()"></select>
+<div id="selectedProfile" class="profile-box hidden"></div>
+<div id="monthlyForm">
+<hr><p><b>Monthly Report</b></p>
+<label>Month</label><select id="pubMonth"></select>
+<label>Service Year</label><input id="pubYear" readonly>
+<div class="check-box"><input type="checkbox" id="pubShared"> <b>Shared in Ministry</b></div>
+<label>Bible Studies</label><input id="pubBS" type="number" placeholder="0">
+<div class="check-box"><input type="checkbox" id="pubAux"> <b>Auxiliary Pioneer</b></div>
+<label>Hours (If pioneer)</label><input id="pubHours" type="number" placeholder="0">
+<label>Remarks</label><textarea id="pubRemarks" placeholder="Optional"></textarea>
+<button class="btn-blue" onclick="saveReport()">✅ SUBMIT REPORT</button>
+<p id="pubMsg" class="small"></p>
+</div></div>
+<button class="btn-grey" onclick="showView('welcomeView')">⬅ BACK</button>
+</div>
+
+<!-- SECRETARY -->
+<div id="secretaryView" class="card hidden">
+<h2>Secretary Dashboard</h2>
+<p class="small">Welcome Secretary.</p>
+<button class="btn-blue" onclick="showView('addPublisherView')">➕ ADD PUBLISHER / PIONEER / ELDER / MS</button>
+<button class="btn-dark" onclick="showView('reportsView'); loadReports()">📋 VIEW ALL REPORTS</button>
+<button class="btn-green" onclick="exportBackup()">⬇ EXPORT BACKUP</button>
+<label>Import Backup (JSON file)</label>
+<input type="file" id="importFile" accept=".json" onchange="importBackup(event)">
+<button class="btn-grey" onclick="logoutSecretary()">🔒 LOGOUT</button>
+<p class="hidden-settings" onclick="showView('settingsView')">⚙️</p>
+</div>
+
+<!-- SECRETARY ADD - PROFESSIONAL -->
+<div id="addPublisherView" class="card hidden">
+<h2>➕ Add Publisher</h2>
+<label>Name:</label><input id="addName" placeholder="e.g. John Phiri">
+<label>Date of Birth:</label><input id="addDOB" type="date">
+<label>Gender</label>
+<div class="check-row">
+<label><input type="radio" name="addGender" value="Male"> Male</label>
+<label><input type="radio" name="addGender" value="Female"> Female</label>
+</div>
+<label>Hope</label>
+<div class="check-row">
+<label><input type="radio" name="addHope" value="Other sheep"> Other sheep</label>
+<label><input type="radio" name="addHope" value="Anointed"> Anointed</label>
+</div>
+<label>Appointment - Elder / MS / Publisher</label>
+<div class="check-row">
+<label><input type="radio" name="addAppoint" value="Publisher" checked> Publisher</label>
+<label><input type="radio" name="addAppoint" value="Elder"> Elder</label>
+<label><input type="radio" name="addAppoint" value="Ministerial Servant"> Ministerial Servant</label>
+</div>
+<label>Pioneer Status - Can be combined</label>
+<select id="addPioneer">
+<option value="None">None - Not a Pioneer</option>
+<option value="Regular Pioneer">Regular Pioneer</option>
+<option value="Auxiliary Pioneer">Auxiliary Pioneer</option>
+<option value="Special Pioneer">Special Pioneer</option>
+<option value="Field Missionary">Field Missionary</option>
+</select>
+<p class="small">Example: Elder + Regular Pioneer ✅ | MS + Regular Pioneer ✅</p>
+<label>Baptism Status</label>
+<div class="check-row">
+<label><input type="radio" name="addBaptized" value="Baptized" checked onclick="toggleBaptism()"> Baptized</label>
+<label><input type="radio" name="addBaptized" value="Unbaptized" onclick="toggleBaptism()"> Unbaptized Publisher</label>
+</div>
+<div id="baptismDateWrap">
+<label>Date of Baptism:</label><input id="addBaptism" type="date">
+</div>
+<button class="btn-blue" onclick="secretaryAddPublisher()">💾 SAVE PUBLISHER</button>
+<button class="btn-grey" onclick="showView('secretaryView')">⬅ BACK</button>
+<p id="addMsg" class="small"></p>
+<hr><h3>All Added - Tap to Filter</h3>
+<p class="small"><b>By Appointment:</b></p><div class="cat-bar" id="catBarAdd"></div>
+<p class="small"><b>By Pioneer:</b></p><div class="cat-bar" id="pioneerBarAdd"></div>
+<div id="addedList" style="font-size:13px"></div>
+</div>
+
+<div id="reportsView" class="card hidden">
+<h2>All Publisher Reports - S-21</h2>
+<label>Filter by Month</label><select id="filterMonth" onchange="loadReports()"></select>
+<p class="small"><b>Filter by Appointment:</b></p><div class="cat-bar" id="catBarReports"></div>
+<p class="small"><b>Filter by Pioneer:</b></p><div class="cat-bar" id="pioneerBarReports"></div>
+<div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Month</th><th>Shared</th><th>BS</th><th>Aux</th><th>Hrs</th><th>Remarks</th></tr></thead><tbody id="reportsBody"></tbody></table></div>
+<p id="totalText" style="font-weight:bold"></p>
+<div id="profilesList" style="font-size:13px;margin-top:12px"></div>
+<button class="btn-red" onclick="clearReports()">🗑 Clear All Reports</button>
+<button class="btn-grey" onclick="showView('secretaryView')">⬅ BACK TO SECRETARY</button>
+</div>
+
+<div id="settingsView" class="card hidden">
+<h2>⚙️ Secretary Settings</h2>
+<label>Congregation Name</label><input id="setCong" value="Chipunka Congregation">
+<label>Secretary PIN</label><input id="setPIN" value="1234">
+<label>Service Year</label>
+<select id="setYear"><option>2026 - 2027</option><option>2025 - 2026</option><option>2027 - 2028</option></select>
+<button class="btn-blue" onclick="saveSettings()">💾 SAVE SETTINGS</button>
+<button class="btn-grey" onclick="showView('secretaryView')">⬅ BACK</button>
+</div>
+<button class="back" onclick="showView('welcomeView')">«</button>
