@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Chipunka Congregation - Publisher Record</title>
+<meta name="theme-color" content="#0a3d62">
+<style>
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+body{margin:0;background:#eef2f5}
+.header{background:#0a3d62;color:#fff;text-align:center;padding:20px 12px}
+.header h1{font-size:20px;margin:0;line-height:1.3}
+.header p{margin:6px 0}
+.badge{background:#ffcc00;color:#000;display:inline-block;padding:8px 14px;border-radius:20px;font-weight:bold;font-size:14px}
+.today{background:#22c55e;color:#fff;padding:10px;border-radius:10px;font-weight:bold;margin:10px auto;max-width:500px}
+.card{background:#fff;margin:14px auto;max-width:500px;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+h2{color:#0a3d62;margin-top:0}
+button{width:100%;padding:14px;margin:8px 0;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer}
+.btn-blue{background:#007bff;color:#fff}
+.btn-grey{background:#e5e7eb;color:#000}
+.btn-orange{background:#ff9800;color:#fff}
+.btn-green{background:#16a34a;color:#fff}
+.btn-red{background:#dc2626;color:#fff}
+.btn-dark{background:#0a3d62;color:#fff}
+input,select,textarea{width:100%;padding:12px;margin:6px 0;border:1px solid #ccc;border-radius:8px;font-size:15px}
+label{font-weight:bold;font-size:14px;color:#333}
+.hidden{display:none}
+.small{font-size:13px;color:#666}
+.row{display:flex;gap:8px}.row>*{flex:1}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border:1px solid #ddd;padding:6px;text-align:left}
+th{background:#0a3d62;color:#fff}
+.back{position:fixed;right:12px;top:50%;background:#0a3d62;color:#fff;width:42px;height:42px;border-radius:50%;font-size:20px;z-index:99}
+.check-row{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}
+.check-row label{font-weight:normal;display:flex;align-items:center;gap:6px}
+.check-row input{width:auto;margin:0}
+.check-box{display:flex;align-items:center;gap:8px;background:#f3f4f6;padding:12px;border-radius:8px;margin:6px 0}
+.check-box input{width:22px;height:22px}
+.profile-box{background:#e0f2fe;padding:12px;border-radius:8px;margin-bottom:12px;font-size:14px}
+</style>
+</head>
+<body>
+
+<div class="header">
+<h1>CHIPUNKA CONGREGATION -<br>PUBLISHER RECORD</h1>
+<p>CONGREGATION'S PUBLISHER RECORD • S-21</p>
+<div class="badge">Service Year: <span id="serviceYearTop">2026 - 2027</span></div>
+<div class="today">Today is: <span id="todayText"></span></div>
+</div>
+
+<div id="welcomeView" class="card">
+<h2>Welcome</h2>
+<button class="btn-blue" onclick="showView('publisherView')">I AM A PUBLISHER</button>
+<button class="btn-grey" onclick="askSecretaryPIN()">I AM SECRETARY 🔒</button>
+<button class="btn-green" onclick="installApp()">📱 INSTALL APP ON PHONE</button>
+<p class="small">Publisher: Enter your details ONCE, then each month just tick and submit.</p>
+</div>
+
+<!-- PUBLISHER -->
+<div id="publisherView" class="card hidden">
+<h2>Congregation's Publisher Record</h2>
+
+<!-- STEP 1: PROFILE - ONLY ONCE -->
+<div id="profileForm">
+<p class="small"><b>STEP 1 - Your Details (Enter ONLY ONCE)</b><br>After you save, this will not show again unless you tap Edit.</p>
+<label>Name:</label>
+<input id="profName" placeholder="e.g. John Phiri">
+<label>Date of Birth:</label>
+<input id="profDOB" type="date">
+<label>Date of Baptism:</label>
+<input id="profBaptism" type="date">
+<label>Gender</label>
+<div class="check-row">
+<label><input type="radio" name="gender" value="Male"> Male</label>
+<label><input type="radio" name="gender" value="Female"> Female</label>
+</div>
+<label>Hope</label>
+<div class="check-row">
+<label><input type="radio" name="hope" value="Other sheep"> Other sheep</label>
+<label><input type="radio" name="hope" value="Anointed"> Anointed</label>
+</div>
+<label>Appointment / Privilege</label>
+<div class="check-row">
+<label><input type="radio" name="appoint" value="Publisher"> Publisher</label>
+<label><input type="radio" name="appoint" value="Elder"> Elder</label>
+<label><input type="radio" name="appoint" value="Ministerial Servant"> Ministerial Servant</label>
+<label><input type="radio" name="appoint" value="Regular Pioneer"> Regular Pioneer</label>
+<label><input type="radio" name="appoint" value="Special Pioneer"> Special Pioneer</label>
+<label><input type="radio" name="appoint" value="Field Missionary"> Field Missionary</label>
+</div>
+<button class="btn-blue" onclick="saveProfile()">💾 SAVE MY DETAILS - DONE ONCE</button>
+</div>
+
+<!-- SAVED PROFILE SHOW -->
+<div id="profileSaved" class="hidden">
+<div class="profile-box" id="profileSummary"></div>
+<button class="btn-grey" onclick="editProfile()">✏️ EDIT MY DETAILS</button>
+</div>
+
+<!-- STEP 2: MONTHLY REPORT - LIKE PAPER TABLE -->
+<div id="monthlyForm" class="hidden">
+<hr>
+<p><b>STEP 2 - Monthly Report</b></p>
+<label>Month</label>
+<select id="pubMonth"></select>
+<label>Service Year</label>
+<input id="pubYear" readonly>
+<div class="check-box"><input type="checkbox" id="pubShared"> <b>Shared in Ministry</b> - Tick if you shared this month</div>
+<label>Bible Studies</label>
+<input id="pubBS" type="number" placeholder="0">
+<div class="check-box"><input type="checkbox" id="pubAux"> <b>Auxiliary Pioneer</b> - Tick if you were Aux Pioneer this month</div>
+<label>Hours (If pioneer or field missionary)</label>
+<input id="pubHours" type="number" placeholder="0">
+<label>Remarks</label>
+<textarea id="pubRemarks" placeholder="Optional"></textarea>
+<button class="btn-blue" onclick="saveReport()">✅ SUBMIT REPORT</button>
+<p id="pubMsg" class="small"></p>
+</div>
+
+<button class="btn-grey" onclick="showView('welcomeView')">⬅ BACK</button>
+</div>
+
+<!-- SECRETARY - UNCHANGED -->
+<div id="secretaryView" class="card hidden">
+<h2>Secretary Dashboard</h2>
+<p class="small">Welcome Secretary. Only you can see Settings & Backup.</p>
+<button class="btn-orange" onclick="showView('settingsView')">⚙️ SETTINGS - Congregation, PIN, Backup</button>
+<button class="btn-dark" onclick="showView('reportsView'); loadReports()">📋 VIEW ALL REPORTS</button>
+<button class="btn-green" onclick="exportBackup()">⬇ EXPORT BACKUP</button>
+<label>Import Backup (JSON file)</label>
+<input type="file" id="importFile" accept=".json" onchange="importBackup(event)">
+<button class="btn-grey" onclick="logoutSecretary()">🔒 LOGOUT</button>
+</div>
+
+<div id="reportsView" class="card hidden">
+<h2>All Publisher Reports - S-21</h2>
+<label>Filter by Month</label>
+<select id="filterMonth" onchange="loadReports()"></select>
+<div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Month</th><th>Shared</th><th>BS</th><th>Aux</th><th>Hrs</th><th>Remarks</th></tr></thead><tbody id="reportsBody"></tbody></table></div>
+<p id="totalText" style="font-weight:bold"></p>
+<div id="profilesList" style="font-size:13px;margin-top:12px"></div>
+<button class="btn-red" onclick="clearReports()">🗑 Clear All Reports</button>
+<button class="btn-grey" onclick="showView('secretaryView')">⬅ BACK TO SECRETARY</button>
+</div>
+
+<div id="settingsView" class="card hidden">
+<h2>⚙️ Secretary Settings</h2>
+<label>Congregation Name</label>
+<input id="setCong" value="Chipunka Congregation">
+<label>Secretary PIN</label>
+<input id="setPIN" value="1234" placeholder="e.g. 1234">
+<label>Service Year</label>
+<select id="setYear"><option>2026 - 2027</option><option>2025 - 2026</option><option>2027 - 2028</option></select>
+<button class="btn-blue" onclick="saveSettings()">💾 SAVE SETTINGS</button>
+<button class="btn-grey" onclick="showView('secretaryView')">⬅ BACK</button>
+</div>
+
+<button class="back" onclick="showView('welcomeView')">«</button>
+
+<script>
+const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const serviceMonths = ["September","October","November","December","January","February","March","April","May","June","July","August"];
+function getSettings(){ let s=JSON.parse(localStorage.getItem('chipunkaSettings')||'null'); if(!s) s={cong:"Chipunka Congregation",pin:"1234",year:"2026 - 2027"}; return s; }
+function saveSettings(){ let s={cong:document.getElementById('setCong').value||"Chipunka Congregation",pin:document.getElementById('setPIN').value||"1234",year:document.getElementById('setYear').value}; localStorage.setItem('chipunkaSettings',JSON.stringify(s)); applySettings(); alert("Settings saved!"); showView('secretaryView'); }
+function applySettings(){ let s=getSettings(); document.getElementById('congNameTop').textContent=s.cong; document.getElementById('serviceYearTop').textContent=s.year; document.getElementById('setCong').value=s.cong; document.getElementById('setPIN').value=s.pin; document.getElementById('setYear').value=s.year; document.getElementById('pubYear').value=s.year; }
+function showView(id){ ['welcomeView','publisherView','secretaryView','reportsView','settingsView'].forEach(v=>document.getElementById(v).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); if(id==='publisherView') refreshProfileUI(); window.scrollTo(0,0); }
+function askSecretaryPIN(){ let pin=prompt("Enter Secretary PIN:"); if(pin===null) return; if(pin===getSettings().pin){ showView('secretaryView'); } else alert("Wrong PIN. Only Secretary can enter."); }
+function logoutSecretary(){ showView('welcomeView'); }
+function getProfile(){ return JSON.parse(localStorage.getItem('chipunkaProfile')||'null'); }
+function saveProfile(){
+  let name=document.getElementById('profName').value.trim();
+  let dob=document.getElementById('profDOB').value;
+  let bap=document.getElementById('profBaptism').value;
+  let gender=document.querySelector('input[name="gender"]:checked');
+  let hope=document.querySelector('input[name="hope"]:checked');
+  let appoint=document.querySelector('input[name="appoint"]:checked');
+  if(!name){ alert("Please enter your Name"); return; }
+  if(!dob){ alert("Please enter Date of Birth"); return; }
+  if(!bap){ alert("Please enter Date of Baptism"); return; }
+  let p={name:name,dob:dob,baptism:bap,gender:gender?gender.value:"",hope:hope?hope.value:"",appoint:appoint?appoint.value:"Publisher"};
+  localStorage.setItem('chipunkaProfile',JSON.stringify(p));
+  // also save to profiles list for secretary
+  let list=JSON.parse(localStorage.getItem('chipunkaProfiles')||'[]');
+  let idx=list.findIndex(x=>x.name===name);
+  if(idx>=0) list[idx]=p; else list.push(p);
+  localStorage.setItem('chipunkaProfiles',JSON.stringify(list));
+  alert("Details saved! You will NOT need to enter them again.");
+  refreshProfileUI();
+}
+function refreshProfileUI(){
+  let p=getProfile();
+  if(p){
+    document.getElementById('profileForm').classList.add('hidden');
+    document.getElementById('profileSaved').classList.remove('hidden');
+    document.getElementById('monthlyForm').classList.remove('hidden');
+    document.getElementById('profileSummary').innerHTML="<b>"+p.name+"</b><br>DOB: "+p.dob+" • Baptism: "+p.baptism+"<br>"+p.gender+" • "+p.hope+" • "+p.appoint;
+  } else {
+    document.getElementById('profileForm').classList.remove('hidden');
+    document.getElementById('profileSaved').classList.add('hidden');
+    document.getElementById('monthlyForm').classList.add('hidden');
+  }
+}
+function editProfile(){
+  let p=getProfile(); if(!p) return;
+  document.getElementById('profName').value=p.name;
+  document.getElementById('profDOB').value=p.dob;
+  document.getElementById('profBaptism').value=p.baptism;
+  document.querySelectorAll('input[name="gender"]').forEach(r=>{ if(r.value===p.gender) r.checked=true; });
+  document.querySelectorAll('input[name="hope"]').forEach(r=>{ if(r.value===p.hope) r.checked=true; });
+  document.querySelectorAll('input[name="appoint"]').forEach(r=>{ if(r.value===p.appoint) r.checked=true; });
+  document.getElementById('profileForm').classList.remove('hidden');
+  document.getElementById('profileSaved').classList.add('hidden');
+  document.getElementById('monthlyForm').classList.add('hidden');
+}
+function saveReport(){
+  let p=getProfile(); if(!p){ alert("Please save your details first"); return; }
+  let r={name:p.name,dob:p.dob,baptism:p.baptism,gender:p.gender,hope:p.hope,appoint:p.appoint,month:document.getElementById('pubMonth').value,year:getSettings().year,shared:document.getElementById('pubShared').checked?"Yes":"",bs:document.getElementById('pubBS').value||0,aux:document.getElementById('pubAux').checked?"Yes":"",hours:document.getElementById('pubHours').value||0,remarks:document.getElementById('pubRemarks').value,time:new Date().toLocaleString()};
+  let all=JSON.parse(localStorage.getItem('chipunkaReports')||'[]');
+  all.push(r);
+  localStorage.setItem('chipunkaReports',JSON.stringify(all));
+  document.getElementById('pubMsg').textContent="✅ Report saved! Thank you "+p.name+" for "+r.month+".";
+  document.getElementById('pubBS').value=''; document.getElementById('pubHours').value=''; document.getElementById('pubRemarks').value=''; document.getElementById('pubShared').checked=false; document.getElementById('pubAux').checked=false;
+}
+function loadReports(){
+  let all=JSON.parse(localStorage.getItem('chipunkaReports')||'[]');
+  let f=document.getElementById('filterMonth').value;
+  let rows=all.filter(r=>!f||f==="All"||r.month===f);
+  let html=""; let tot=0; let totBS=0;
+  rows.forEach(r=>{ tot+=Number(r.hours||0); totBS+=Number(r.bs||0); html+=`<tr><td>${r.name}<br><small>${r.appoint||""} • ${r.gender||""} • ${r.hope||""}</small></td><td>${r.month}</td><td>${r.shared?"✅":""}</td><td>${r.bs}</td><td>${r.aux?"✅":""}</td><td>${r.hours}</td><td>${r.remarks||""}</td></tr>`; });
+  document.getElementById('reportsBody').innerHTML=html||"<tr><td colspan='7'>No reports yet</td></tr>";
+  document.getElementById('totalText').textContent="Total Hours: "+tot+" • Total Bible Studies: "+totBS+" • Reports: "+rows.length;
+  let profs=JSON.parse(localStorage.getItem('chipunkaProfiles')||'[]');
+  let ph="<b>Publisher Profiles (Entered Once):</b><br>";
+  profs.forEach(p=>{ ph+=p.name+" - DOB: "+p.dob+" - Baptism: "+p.baptism+" - "+p.gender+" - "+p.hope+" - "+p.appoint+"<br>"; });
+  document.getElementById('profilesList').innerHTML=profs.length?ph:"";
+}
+function clearReports(){ if(confirm("Delete ALL reports?")){ localStorage.removeItem('chipunkaReports'); loadReports(); } }
+function exportBackup(){ let data={settings:getSettings(),profiles:JSON.parse(localStorage.getItem('chipunkaProfiles')||'[]'),reports:JSON.parse(localStorage.getItem('chipunkaReports')||'[]')}; let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='Chipunka-Backup.json'; a.click(); }
+function importBackup(e){ let file=e.target.files[0]; if(!file) return; let reader=new FileReader(); reader.onload=function(){ try{ let d=JSON.parse(reader.result); if(d.settings) localStorage.setItem('chipunkaSettings',JSON.stringify(d.settings)); if(d.reports) localStorage.setItem('chipunkaReports',JSON.stringify(d.reports)); if(d.profiles) localStorage.setItem('chipunkaProfiles',JSON.stringify(d.profiles)); applySettings(); alert("Backup restored!"); }catch(err){ alert("Invalid backup file"); } }; reader.readAsText(file); }
+function installApp(){ alert("To install: Tap Chrome 3 dots > Create shortcut / Install and create shortcut > Add."); }
+let now=new Date();
+document.getElementById('todayText').textContent=months[now.getMonth()]+" "+now.getDate()+", "+now.getFullYear();
+let mSel=document.getElementById('pubMonth'); let fSel=document.getElementById('filterMonth');
+serviceMonths.forEach(m=>{ let o=document.createElement('option'); o.value=m; o.textContent=m; if(m===months[now.getMonth()]) o.selected=true; mSel.appendChild(o); });
+let fall=document.createElement('option'); fall.value="All"; fall.textContent="All Months"; fSel.appendChild(fall);
+serviceMonths.forEach(m=>{ let o=document.createElement('option'); o.value=m; o.textContent=m; fSel.appendChild(o); });
+applySettings(); refreshProfileUI();
+if('serviceWorker' in navigator){ navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister())); }
+if('caches' in window){ caches.keys().then(k=>k.forEach(n=>caches.delete(n))); }
+</script>
+</body>
+</html>
