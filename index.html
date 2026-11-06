@@ -180,5 +180,10 @@ function showAll(){
 function installApp(){ alert('In Chrome, tap 3 dots > Add to Home screen / Install app'); }
 updateHeader();
 </script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
 </body>
 </html>
