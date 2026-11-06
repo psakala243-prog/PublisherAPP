@@ -5,6 +5,8 @@
 <title>Publisher Record S-21-E</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a3d62">
 *{box-sizing:border-box}
 body{font-family:Arial;margin:0;background:#eef2f7;padding-bottom:90px}
 .top{background:#1a3a5e;color:white;padding:18px;text-align:center}
