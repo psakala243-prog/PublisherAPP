@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PublisherAPP - Linked</title>
+<style>
+*{box-sizing:border-box}body{font-family:system-ui,Arial;margin:0;background:#f3f4f6;color:#111;padding:14px}
+.card{background:#fff;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 2px 8px #0001}
+input,select,textarea{width:100%;padding:11px;border:1px solid #ddd;border-radius:10px;margin:6px 0;font-size:15px}
+button{padding:11px 14px;border:0;border-radius:10px;font-weight:700;cursor:pointer;margin:4px 2px}
+.btn-green{background:#16a34a;color:#fff}.btn-blue{background:#2563eb;color:#fff}.btn-red{background:#dc2626;color:#fff}.btn-gray{background:#e5e7eb}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}.tabs button{background:#e5e7eb}.tabs button.active{background:#111;color:#fff}
+.badge{padding:3px 8px;border-radius:20px;font-size:12px;background:#dcfce7}.badge.priv{background:#fee2e2}
+.hidden{display:none}.small{font-size:13px;color:#666}
+@media print{button,.tabs,#searchBox,#loginScreen{display:none!important}.card{box-shadow:none!important;border:1px solid #999}}
+</style></head>
+<body>
+<div id="loginScreen" class="card">
+<h2>📖 PublisherAPP - Login</h2>
+<p class="small">Same link for everyone. Use ID + Password given by Secretary.</p>
+<label>Your ID</label><input id="loginId" placeholder="e.g. PSAKALA01 or SECRETARY">
+<label>Password</label><input id="loginPass" type="password" placeholder="Password">
+<button class="btn-blue" onclick="doLogin()" style="width:100%">Login</button>
+<p id="loginMsg" class="small"></p>
+<p class="small">First time? Secretary: ID = <b>SECRETARY</b> / Password = <b>admin123</b></p>
+</div>
+<div id="appScreen" class="hidden">
+<div style="display:flex;justify-content:space-between;align-items:center"><h2>📖 PublisherAPP</h2><button class="btn-red" onclick="logout()">Logout</button></div>
+<p id="whoLine" class="small"></p>
+<div class="tabs">
+<button id="tabBtn-list" class="active" onclick="showTab('list')">📋 List</button>
+<button id="tabBtn-add" onclick="showTab('add')">➕ Add / Edit</button>
+<button id="tabBtn-users" onclick="showTab('users')">👥 Users (Secretary)</button>
+<button id="tabBtn-settings" onclick="showTab('settings')">⚙️ Settings</button>
+</div>
+<div id="tab-list" class="card">
+<input id="searchBox" placeholder="🔍 Search name or ID..." oninput="renderList()">
+<button class="btn-green" onclick="window.print()">🖨️ Print List</button>
+<button class="btn-gray" onclick="loadData()">🔄 Refresh (Sync)</button>
+<p id="showing" class="small"></p>
+<div id="list"></div>
+</div>
+<div id="tab-add" class="card hidden">
+<h3 id="formTitle">Add Publisher Report</h3>
+<input id="fName" placeholder="Full Name *">
+<input id="fId" placeholder="Publisher ID * e.g. PSAKALA01">
+<input id="fGroup" placeholder="Field Service Group">
+<input id="fHours" type="number" placeholder="Hours">
+<input id="fPlacements" type="number" placeholder="Placements">
+<input id="fVideos" type="number" placeholder="Videos Shown">
+<input id="fRV" type="number" placeholder="Return Visits">
+<input id="fStudies" type="number" placeholder="Bible Studies">
+<input id="fRemarks" placeholder="Remarks / Privileges">
+<label><input type="checkbox" id="fPriv" style="width:auto"> Privileged / Private</label>
+<p id="lockMsg" class="small" style="color:#dc2626"></p>
+<button class="btn-green" onclick="saveRecord()">💾 Save (Syncs to all)</button>
+<button class="btn-gray" onclick="clearForm()">Clear</button>
+</div>
+<div id="tab-users" class="card hidden">
+<h3>Create Publisher Login</h3>
+<p class="small">Only Secretary sees this.</p>
+<input id="uId" placeholder="New Publisher ID e.g. JOHN01">
+<input id="uName" placeholder="Publisher Full Name">
+<input id="uPass" placeholder="Password e.g. 1234">
+<button class="btn-blue" onclick="createUser()">Create Publisher Account</button>
+<div id="usersList"></div>
+</div>
+<div id="tab-settings" class="card hidden">
+<h3>Settings</h3>
+<label>Change Secretary Password</label><input id="newSecPass" type="password" placeholder="New Secretary Password">
+<button class="btn-blue" onclick="changeSecPass()">Change Password</button>
+<p class="small">Cloud: Firebase Firestore - publisherapp-f38af. All devices sync.</p>
+</div>
+</div>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
+import {getFirestore, doc, getDoc, setDoc, onSnapshot} from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
+const firebaseConfig={apiKey:"AIzaSyBobbLJmK7HbdPlN7bNhFP9flkhafvkapA",authDomain:"publisherapp-f38af.firebaseapp.com",projectId:"publisherapp-f38af",storageBucket:"publisherapp-f38af.firebasestorage.app",messagingSenderId:"8811787300",appId:"1:8811787300:web:b3604bc37bc1fa809f54b1"};
+const app=initializeApp(firebaseConfig); const db=getFirestore(app);
+let publishers=[], users=[], currentUser=null, currentRole='', editingId=null;
+const mainDoc=doc(db,"app","main");
+async function ensureData(){let s=await getDoc(mainDoc); if(!s.exists()){await setDoc(mainDoc,{publishers:[],users:[{id:"SECRETARY",name:"Secretary",pass:"admin123",role:"secretary"}]});}}
+async function loadData(){await ensureData(); onSnapshot(mainDoc,(s)=>{if(s.exists()){let d=s.data(); publishers=d.publishers||[]; users=d.users||[]; renderList(); renderUsers();}});}
+async function saveCloud(){await setDoc(mainDoc,{publishers,users});}
+window.doLogin=async function(){let id=document.getElementById('loginId').value.trim().toUpperCase(); let pass=document.getElementById('loginPass').value.trim(); await ensureData(); let s=await getDoc(mainDoc); let d=s.data(); users=d.users||[]; publishers=d.publishers||[]; let u=users.find(x=>x.id===id && x.pass===pass); if(!u){document.getElementById('loginMsg').innerText="❌ Wrong ID or Password. Ask Secretary."; return;} currentUser=u; currentRole=u.role; document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('appScreen').classList.remove('hidden'); document.getElementById('whoLine').innerText="Logged in as: "+u.name+" ("+u.id+" - "+u.role+") • Cloud Synced ✓"; if(currentRole!=='secretary'){document.getElementById('tabBtn-users').style.display='none'; document.getElementById('tabBtn-settings').style.display='none'; fillFormForPublisher();} loadData();};
+window.logout=function(){location.reload();};
+window.showTab=function(t){['list','add','users','settings'].forEach(x=>{document.getElementById('tab-'+x).classList.toggle('hidden',x!==t); document.getElementById('tabBtn-'+x).classList.toggle('active',x===t);});};
+function fillFormForPublisher(){let p=publishers.find(x=>x.id===currentUser.id); if(p){document.getElementById('fName').value=p.name||''; document.getElementById('fId').value=p.id||''; document.getElementById('fGroup').value=p.group||''; document.getElementById('fHours').value=p.hours||''; document.getElementById('fPlacements').value=p.placements||''; document.getElementById('fVideos').value=p.videos||''; document.getElementById('fRV').value=p.rv||''; document.getElementById('fStudies').value=p.studies||''; document.getElementById('fRemarks').value=p.remarks||''; editingId=p.id; checkLock(p);}}
+function checkLock(p){let msg=document.getElementById('lockMsg'); if(!p||!p._savedAt){msg.innerText=''; return;} if(currentRole!=='secretary' && (Date.now()-p._savedAt)>86400000){msg.innerText='🔒 Locked - over 1 day old. Only Secretary can edit.';} else msg.innerText='';}
+window.clearForm=function(){['fName','fId','fGroup','fHours','fPlacements','fVideos','fRV','fStudies','fRemarks'].forEach(id=>document.getElementById(id).value=''); document.getElementById('fPriv').checked=false; editingId=null; document.getElementById('formTitle').innerText='Add Publisher Report'; document.getElementById('lockMsg').innerText='';};
+window.saveRecord=async function(){let name=document.getElementById('fName').value.trim(); let id=document.getElementById('fId').value.trim().toUpperCase(); if(!name||!id){alert('Name + ID required'); return;} if(currentRole!=='secretary'){id=currentUser.id;} let existing=publishers.find(x=>x.id===id); if(existing && currentRole!=='secretary' && existing._savedAt && (Date.now()-existing._savedAt)>86400000){alert('🔒 Locked - over 1 day. Only Secretary can edit.'); return;} let rec={id,name,group:document.getElementById('fGroup').value,hours:+document.getElementById('fHours').value||0,placements:+document.getElementById('fPlacements').value||0,videos:+document.getElementById('fVideos').value||0,rv:+document.getElementById('fRV').value||0,studies:+document.getElementById('fStudies').value||0,remarks:document.getElementById('fRemarks').value,priv:document.getElementById('fPriv').checked,_savedAt: existing && currentRole!=='secretary' ? existing._savedAt : Date.now()}; if(existing){Object.assign(existing,rec);} else publishers.push(rec); await saveCloud(); alert('✅ Saved & Synced to all phones!'); showTab('list');};
+window.renderList=function(){let q=(document.getElementById('searchBox').value||'').toLowerCase(); let list=publishers.filter(p=> (currentRole==='secretary' || p.id===currentUser.id) && (p.name.toLowerCase().includes(q)||p.id.toLowerCase().includes(q))); document.getElementById('showing').innerText="Showing "+list.length+" of "+publishers.length+" • Total Hours: "+list.reduce((a,p)=>a+(+p.hours||0),0); document.getElementById('list').innerHTML=list.map(p=>`<div class="card"><b>${p.name}</b> (${p.id}) ${p.priv?'<span class="badge priv">Private</span>':'<span class="badge">Public</span>'}<br><span class="small">Group: ${p.group||''} • Hours: ${p.hours} • Placements: ${p.placements} • Videos: ${p.videos} • RV: ${p.rv} • Studies: ${p.studies}</span><br><span class="small">${p.remarks||''}</span><br><button class="btn-blue" onclick="editPub('${p.id}')">Edit</button> ${currentRole==='secretary'?`<button class="btn-red" onclick="delPub('${p.id}')">Delete</button>`:''}</div>`).join('')||'<p>No records yet</p>';};
+window.editPub=function(id){let p=publishers.find(x=>x.id===id); if(!p) return; if(currentRole!=='secretary' && p._savedAt && (Date.now()-p._savedAt)>86400000){alert('🔒 Locked - over 1 day. Only Secretary can edit.'); return;} editingId=id; document.getElementById('fName').value=p.name; document.getElementById('fId').value=p.id; document.getElementById('fGroup').value=p.group||''; document.getElementById('fHours').value=p.hours; document.getElementById('fPlacements').value=p.placements; document.getElementById('fVideos').value=p.videos; document.getElementById('fRV').value=p.rv; document.getElementById('fStudies').value=p.studies; document.getElementById('fRemarks').value=p.remarks||''; document.getElementById('fPriv').checked=!!p.priv; checkLock(p); showTab('add');};
+window.delPub=async function(id){if(!confirm('Delete '+id+'?')) return; publishers=publishers.filter(x=>x.id!==id); await saveCloud();};
+window.createUser=async function(){if(currentRole!=='secretary'){alert('Only Secretary'); return;} let id=document.getElementById('uId').value.trim().toUpperCase(); let name=document.getElementById('uName').value.trim(); let pass=document.getElementById('uPass').value.trim(); if(!id||!name||!pass){alert('All fields required'); return;} if(users.find(x=>x.id===id)){alert('ID already exists'); return;} users.push({id,name,pass,role:'publisher'}); await saveCloud(); alert('✅ Created: '+id+' / '+pass); document.getElementById('uId').value=''; document.getElementById('uName').value=''; document.getElementById('uPass').value='';};
+window.renderUsers=function(){if(currentRole!=='secretary') return; document.getElementById('usersList').innerHTML='<h4>All Logins</h4>'+users.map(u=>`<div class="card"><b>${u.id}</b> - ${u.name} (${u.role})<br><span class="small">Password: ${u.pass}</span></div>`).join('');};
+window.changeSecPass=async function(){let np=document.getElementById('newSecPass').value.trim(); if(!np){alert('Enter new password'); return;} let u=users.find(x=>x.role==='secretary'); if(u) u.pass=np; await saveCloud(); alert('Secretary password changed');};
+window.loadData=loadData;
+</script></body></html>
