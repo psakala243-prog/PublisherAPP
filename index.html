@@ -202,6 +202,16 @@ serviceMonths.forEach(m=>{let o=document.createElement('option'); o.value=m; o.t
 applySettings(); renderCatBars();
 if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister()));}
 if('caches' in window){caches.keys().then(k=>k.forEach(n=>caches.delete(n)));}
+// FIX: Publisher must NOT see DOB - override old function
+function onSelectPublisher(){
+let name=document.getElementById('selectPublisher').value;
+let p=getProfiles().find(x=>x.name===name);
+if(!p){document.getElementById('selectedProfile').classList.add('hidden'); return;}
+let el=document.getElementById('selectedProfile');
+el.classList.remove('hidden');
+let pioneerText = p.pioneer && p.pioneer!=="None" ? " / " + p.pioneer : "";
+el.innerHTML="<b>"+p.name+"</b><br>"+(p.appoint||"Publisher")+pioneerText;
+}
 </script>
 </body>
 </html>
