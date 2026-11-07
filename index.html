@@ -224,5 +224,14 @@ function changePin(){
 }
 </script>
 <!-- SETTINGS - CHANGE SECRETARY PASSWORD -->
+<div class="card">
+<h2 style="margin:0">⚙️ Settings - Secretary Password</h2>
+<p class="muted">Only Secretary can change the password. Current default is 1234.</p>
+<input type="password" id="oldPin" placeholder="Enter Current PIN">
+<input type="password" id="newPin" placeholder="Enter New PIN">
+<input type="password" id="confirmPin" placeholder="Confirm New PIN">
+<button class="btn-blue" style="width:100%" onclick="changePin()">🔑 Change Password</button>
+<p class="muted" id="pinMsg"></p>
+</div>
 </body>
 </html>
