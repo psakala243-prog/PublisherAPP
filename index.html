@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chipunka Congregation - Publisher Records</title>
+<link rel="icon" href="data:image/svg+xml,[STRIPPED]">
+<meta name="theme-color" content="#1e4fa3">
+<style>
+*{box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
+body{margin:0;background:#eef2f7;padding:12px;color:#0f172a}
+.header{background:linear-gradient(135deg,#1e4fa3,#0f2f6b);color:#fff;padding:20px 14px;border-radius:16px;text-align:center}
+.header h1{margin:0;font-size:22px}.header p{margin:6px 0 0;opacity:.9;font-size:14px}
+.sub{font-size:12px;background:rgba(255,255,255,.18);display:inline-block;padding:5px 12px;border-radius:20px;margin-top:10px}
+.card{background:#fff;border-radius:16px;padding:15px;margin-top:12px;box-shadow:0 2px 10px rgba(0,0,0,.07)}
+.row{display:flex;gap:10px}.row>*{flex:1}
+button{border:0;border-radius:12px;padding:12px;cursor:pointer;font-weight:700;font-size:14px}
+.btn-blue{background:#1e4fa3;color:#fff;width:100%}.btn-grey{background:#e2e8f0;width:100%}
+.btn-green{background:#16a34a;color:#fff}.btn-red{background:#dc2626;color:#fff}.btn-small{padding:8px 10px;font-size:13px}
+.btn-orange{background:#ea580c;color:#fff;width:100%}
+input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:12px;margin:6px 0;font-size:15px;background:#f8fafc}
+label{font-size:13px;font-weight:700;color:#334155;display:block;margin-top:10px}
+.stats{display:flex;gap:10px;margin-top:12px}
+.stat{background:#fff;flex:1;text-align:center;border-radius:16px;padding:16px 6px;box-shadow:0 2px 10px rgba(0,0,0,.07)}
+.stat b{font-size:26px;color:#1e4fa3;display:block}.stat span{font-size:12px;color:#64748b;display:block}
+.badge{display:inline-block;padding:4px 9px;border-radius:20px;font-size:12px;font-weight:700;margin:2px}
+.b-elder{background:#dbeafe;color:#1e40af}.b-serv{background:#fef3c7;color:#92400e}
+.b-reg{background:#dcfce7;color:#166534}.b-aux{background:#e0e7ff;color:#3730a3}.b-spec{background:#fce7f3;color:#9d174d}
+.pub{border-top:1px solid #e2e8f0;padding:13px 0}.pub b{font-size:16px}
+.tabs{display:flex;gap:10px}.tabs button{flex:1}.hidden{display:none}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #cbd5e1;padding:6px;text-align:center}th{background:#1e4fa3;color:#fff}
+td input{padding:6px;margin:0;text-align:center}td input[type=checkbox]{width:20px;height:20px}
+.footer{text-align:center;font-size:12px;color:#94a3b8;padding:14px}
+.loginBox{max-width:420px;margin:20px auto;text-align:center}
+</style>
+</head>
+<body>
+<div id="welcomeScreen" class="card loginBox">
+<div style="background:#1e4fa3;color:#fff;border-radius:14px;padding:18px"><h1 style="margin:0">CHIPUNKA CONGREGATION</h1><p style="margin:8px 0 0">S-21 • Publisher Record</p><p style="margin:8px 0 0;font-size:13px;background:#facc15;color:#000;border-radius:20px;padding:6px">Service Year: 2026 - 2027 • Automatic</p></div>
+<h2 style="text-align:left">Welcome</h2>
+<button class="btn-blue" onclick="goRole('publisher')">I AM A PUBLISHER</button><br><br>
+<button class="btn-grey" onclick="goRole('secretary')">I AM SECRETARY 🔒</button><br><br>
+<button class="btn-grey" onclick="goRole('brother')">I AM APPOINTED BROTHER 🤝</button><br><br>
+<button class="btn-green" onclick="alert('Tap Share > Add to Home Screen in your browser to install.')">📱 INSTALL APP ON PHONE</button>
+</div>
+
+<div id="loginScreen" class="card loginBox hidden">
+<h1 style="color:#1e4fa3;margin:0" id="loginTitle">Secretary Login</h1>
+<p style="color:#64748b" id="loginDesc">Enter Secretary password</p>
+<label style="text-align:left">Password</label>
+<input id="loginPass" type="password" placeholder="Enter password">
+<button class="btn-blue" onclick="doLogin()">🔑 Login</button><br><br>
+<button class="btn-grey" onclick="backToWelcome()">⬅️ Back</button>
+<p style="font-size:12px;color:#94a3b8" id="loginHint"></p>
+</div>
+
+<div id="mainApp" class="hidden">
+<div class="header"><h1>Chipunka Congregation</h1><p>Congregation Publisher Records</p><span class="sub" id="roleBadge">✅ Secretary Access • S-21 Digital Record Card</span></div>
+<div class="card"><div class="row">
+<button class="btn-grey" id="settingsBtn" onclick="showSettings()">⚙️ Settings</button>
+<button class="btn-blue" onclick="logout()">🔒 Logout</button></div>
+<p id="roleNote" style="font-size:12px;color:#64748b;text-align:center;margin:8px 0 0"></p></div>
+<div class="stats">
+<div class="stat"><b id="totalCount">0</b><span>Total<br>Publishers</span></div>
+<div class="stat"><b id="pioneerCount">0</b><span>Pioneers</span></div>
+<div class="stat"><b id="elderCount">0</b><span>Elders /<br>Servants</span></div>
+</div>
+<div class="card"><div class="tabs"><button id="tabAll" class="btn-blue" onclick="showTab('all')">📋 All Publishers</button><button id="tabAdd" class="btn-grey" onclick="showTab('add')">➕ Add / Edit</button></div></div>
+<div id="allSection" class="card">
+<h2 style="margin:0">All Publishers</h2>
+<p style="color:#64748b;font-size:13px">Tap <b>📋 Record</b> to enter monthly service.</p>
+<input id="searchBox" placeholder="🔍 Search by name, phone, group..." oninput="render()">
+<div class="row"><select id="filterGroup" onchange="render()"><option value="">All Groups</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
+<select id="filterPriv" onchange="render()"><option value="">All Privileges</option><option value="Elder">Elders</option><option value="Ministerial Servant">Ministerial Servants</option><option value="Regular Pioneer">Regular Pioneers</option><option value="Auxiliary Pioneer">Auxiliary Pioneers</option><option value="Special Pioneer">Special Pioneers</option></select></div>
+<p id="showing" style="font-size:13px;color:#64748b"></p><div id="list"></div>
+</div>
+
+<div id="addSection" class="card hidden">
+<h2 style="margin:0">Add / Edit Publisher - S-21 Card</h2>
+<label>First Name</label><input id="fFirst" placeholder="e.g. Patrick">
+<label>Surname</label><input id="fLast" placeholder="e.g. Sakala">
+<label>Date of Birth</label><input id="fDob" type="date">
+<label>Date of Baptism</label><input id="fBap" type="date">
+<label>Phone</label><input id="fPhone" placeholder="e.g. 0977399807">
+<label>Field Service Group</label><input id="fGroup" placeholder="e.g. 4">
+<label>Gender</label><select id="fGender"><option>Male</option><option>Female</option></select>
+<label>Hope</label><select id="fHope"><option>Other Sheep</option><option>Anointed</option></select>
+<label>Appointment</label><select id="fAppt"><option>Publisher</option><option>Elder</option><option>Ministerial Servant</option></select>
+<label>Pioneer Service — Separate from Appointment</label><select id="fPriv"><option>Not a Pioneer</option><option>Auxiliary Pioneer</option><option>Regular Pioneer</option><option>Special Pioneer</option><option>Field Missionary</option></select>
+<input type="hidden" id="editId">
+<button class="btn-blue" onclick="savePublisher()">💾 Save Publisher</button>
+<button class="btn-grey" style="margin-top:8px" onclick="clearForm()">Clear Form</button>
+</div>
+
+<div id="recordSection" class="card hidden">
+<h2 id="recTitle" style="margin:0">Publisher Record</h2>
+<p id="recInfo" style="color:#64748b;font-size:13px"></p>
+<div style="overflow-x:auto"><table>
+<tr><th>Month</th><th>Shared</th><th>Bible Studies</th><th>Aux. Pioneer</th><th>Hours</th><th>Remarks</th></tr>
+<tbody id="recBody"></tbody>
+<tr><td colspan="4"><b>Total</b></td><td><b id="recTotal">0</b></td><td></td></tr>
+</table></div>
+<button class="btn-blue" style="margin-top:12px" onclick="saveRecord()">💾 Save Monthly Record</button>
+<button class="btn-grey" style="margin-top:8px" onclick="showTab('all')">⬅️ Back to List</button>
+</div>
+
+<div id="settingsSection" class="card hidden">
+<h2 style="margin:0">⚙️ Settings - Secretary Only</h2>
+<p style="color:#64748b;font-size:13px">Only the Secretary can see this page.</p>
+<h3>🔑 Change Secretary Password</h3>
+<label>Current Secretary Password</label><input id="curPass" type="password" placeholder="Current password">
+<label>New Secretary Password</label><input id="newPass" type="password" placeholder="New password">
+<label>Confirm New Password</label><input id="conPass" type="password" placeholder="Confirm">
+<button class="btn-blue" onclick="changePassword()">🔑 Change Secretary Password</button>
+<h3 style="margin-top:22px">🤝 Change Appointed Brother Password</h3>
+<label>New Appointed Brother Password</label><input id="newBroPass" type="password" placeholder="New Brother password">
+<button class="btn-orange" onclick="changeBrotherPass()">🤝 Change Brother Password</button>
+<h3 style="margin-top:22px">💾 Backup</h3>
+<button class="btn-green" style="margin-top:10px" onclick="exportData()">⬇️ Download Backup</button><br><br>
+<button class="btn-grey" onclick="showTab('all')">⬅️ Back</button>
+</div>
+<div class="footer">Chipunka Congregation • Digital S-21 Publisher Record • For Appointed Use Only</div>
+</div>
+<script>
+const MONTHS=['September','October','November','December','January','February','March','April','May','June','July','August'];
+let publishers = JSON.parse(localStorage.getItem('chipunka_pubs') || '[]');
+publishers = publishers.map(p=>{
+  if(!p.appt){
+    if(p.priv==='Elder'||p.priv==='Ministerial Servant'){ p.appt=p.priv; p.priv='Not a Pioneer'; }
+    else if(['Regular Pioneer','Auxiliary Pioneer','Special Pioneer','Field Missionary'].includes(p.priv)){ p.appt='Publisher'; }
+    else { p.appt='Publisher'; p.priv='Not a Pioneer'; }
+  }
+  if(!p.reports) p.reports={};
+  return p;
+});
+let currentRole = sessionStorage.getItem('chipunka_role') || '';
+let pendingRole = 'secretary';
+function goRole(role){
+  if(role==='publisher'){
+    currentRole='publisher'; sessionStorage.setItem('chipunka_role','publisher');
+    document.getElementById('welcomeScreen').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+    applyRole(); render(); return;
+  }
+  pendingRole=role;
+  document.getElementById('welcomeScreen').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('loginTitle').textContent = role==='secretary' ? 'Secretary Login' : 'Appointed Brother Login';
+  document.getElementById('loginDesc').textContent = role==='secretary' ? 'Enter Secretary password' : 'Enter Appointed Brother password';
+  document.getElementById('loginHint').textContent = role==='secretary' ? 'First time? Password is: Chipunka123' : 'First time? Password is: Brother123';
+  document.getElementById('loginPass').value='';
+}
+function backToWelcome(){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('welcomeScreen').classList.remove('hidden');
+}
+function getPass(key, def){ return localStorage.getItem(key) || def; }
+function doLogin(){
+  const v=document.getElementById('loginPass').value;
+  const ok = pendingRole==='secretary' ? v===getPass('chipunka_pass','Chipunka123') : v===getPass('chipunka_brother_pass','Brother123');
+  if(!ok){ alert('Wrong password. Try again.'); return; }
+  currentRole=pendingRole; sessionStorage.setItem('chipunka_role', currentRole);
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+  applyRole(); render();
+}
+function applyRole(){
+  const isSec = currentRole==='secretary';
+  const isBro = currentRole==='brother';
+  const isPub = currentRole==='publisher';
+  document.getElementById('settingsBtn').style.display = isSec ? 'block' : 'none';
+  document.getElementById('roleBadge').textContent = isSec ? '✅ Secretary Access • S-21 Digital Record Card' : isBro ? '🤝 Appointed Brother Access • Can Add / Edit Publishers' : '👤 Publisher Access • View & Enter Your Record';
+  document.getElementById('roleNote').textContent = isSec ? 'You can Add, Edit, Delete + Settings' : isBro ? 'You can Add & Edit publishers. No Settings, No Delete.' : 'You can view list and enter your monthly Record. No Add / Edit / Delete.';
+  document.getElementById('tabAdd').style.display = isPub ? 'none' : 'block';
+}
+function logout(){
+  sessionStorage.removeItem('chipunka_role'); currentRole='';
+  document.getElementById('mainApp').classList.add('hidden');
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('welcomeScreen').classList.remove('hidden');
+}
+function changePassword(){
+  if(currentRole!=='secretary'){ alert('Only Secretary can change password.'); return; }
+  const cur=document.getElementById('curPass').value;
+  const nw=document.getElementById('newPass').value;
+  const cf=document.getElementById('conPass').value;
+  if(cur!==getPass('chipunka_pass','Chipunka123')){ alert('Current password is wrong.'); return; }
+  if(nw.length<4){ alert('New password must be at least 4 characters.'); return; }
+  if(nw!==cf){ alert('New passwords do not match.'); return; }
+  localStorage.setItem('chipunka_pass', nw);
+  document.getElementById('curPass').value=''; document.getElementById('newPass').value=''; document.getElementById('conPass').value='';
+  alert('✅ Secretary password changed!');
+  showTab('all');
+}
+function changeBrotherPass(){
+  if(currentRole!=='secretary'){ alert('Only Secretary can change this.'); return; }
+  const nw=document.getElementById('newBroPass').value;
+  if(nw.length<4){ alert('Brother password must be at least 4 characters.'); return; }
+  localStorage.setItem('chipunka_brother_pass', nw);
+  document.getElementById('newBroPass').value='';
+  alert('✅ Appointed Brother password changed! Tell him the new password.');
+}
+function saveLS(){ localStorage.setItem('chipunka_pubs', JSON.stringify(publishers)); }
+function showTab(t){
+  if(t==='add' && currentRole==='publisher'){ alert('Publishers cannot add publishers. Ask Secretary or Appointed Brother.'); return; }
+  ['allSection','addSection','recordSection','settingsSection'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  if(t==='all') document.getElementById('allSection').classList.remove('hidden');
+  if(t==='add') document.getElementById('addSection').classList.remove('hidden');
+  document.getElementById('tabAll').className = t==='all' ? 'btn-blue' : 'btn-grey';
+  document.getElementById('tabAdd').className = t==='add' ? 'btn-blue' : 'btn-grey';
+}
+function showSettings(){
+  if(currentRole!=='secretary'){ alert('Settings is inside Secretary only.'); return; }
+  ['allSection','addSection','recordSection'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  document.getElementById('settingsSection').classList.remove('hidden');
+}
+function clearForm(){
+  ['fFirst','fLast','fDob','fBap','fPhone','fGroup'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fGender').value='Male'; document.getElementById('fHope').value='Other Sheep';
+  document.getElementById('fAppt').value='Publisher'; document.getElementById('fPriv').value='Not a Pioneer';
+  document.getElementById('editId').value='';
+}
+function savePublisher(){
+  if(currentRole==='publisher'){ alert('Publishers cannot add.'); return; }
+  const first=document.getElementById('fFirst').value.trim();
+  const last=document.getElementById('fLast').value.trim();
+  if(!first||!last){ alert('Please enter First Name and Surname'); return; }
+  const id=document.getElementById('editId').value || Date.now().toString();
+  const old=publishers.find(p=>p.id==id);
+  const data={ id, first, last, dob:document.getElementById('fDob').value, bap:document.getElementById('fBap').value,
+    phone:document.getElementById('fPhone').value.trim(), group:document.getElementById('fGroup').value.trim(),
+    gender:document.getElementById('fGender').value, hope:document.getElementById('fHope').value,
+    appt:document.getElementById('fAppt').value, priv:document.getElementById('fPriv').value,
+    reports: old? old.reports : {} };
+  const idx=publishers.findIndex(p=>p.id==id);
+  if(idx>=0) publishers[idx]=data; else publishers.push(data);
+  saveLS(); clearForm(); showTab('all'); render();
+}
+function editPub(id){
+  if(currentRole==='publisher'){ alert('Publishers cannot edit.'); return; }
+  const p=publishers.find(x=>x.id==id); if(!p) return;
+  document.getElementById('fFirst').value=p.first; document.getElementById('fLast').value=p.last;
+  document.getElementById('fDob').value=p.dob||''; document.getElementById('fBap').value=p.bap||'';
+  document.getElementById('fPhone').value=p.phone||''; document.getElementById('fGroup').value=p.group||'';
+  document.getElementById('fGender').value=p.gender||'Male'; document.getElementById('fHope').value=p.hope||'Other Sheep';
+  document.getElementById('fAppt').value=p.appt||'Publisher'; document.getElementById('fPriv').value=p.priv||'Not a Pioneer';
+  document.getElementById('editId').value=p.id; showTab('add'); window.scrollTo(0,0);
+}
+function delPub(id){
+  if(currentRole!=='secretary'){ alert('Only Secretary can delete.'); return; }
+  if(confirm('Delete this publisher?')){ publishers=publishers.filter(p=>p.id!=id); saveLS(); render(); }
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify(publishers,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='chipunka-backup.json'; a.click();
+}
+let currentRecId=null;
+function openRecord(id){
+  const p=publishers.find(x=>x.id==id); if(!p) return; currentRecId=id;
+  document.getElementById('recTitle').textContent="Congregation's Publisher Record - "+p.first+' '+p.last;
+  document.getElementById('recInfo').textContent=(p.gender||'')+' • '+(p.hope||'')+' • Born: '+(p.dob||'-')+' • Baptised: '+(p.bap||'-')+' • Group '+(p.group||'-');
+  document.getElementById('recBody').innerHTML=MONTHS.map(m=>{
+    const r=(p.reports&&p.reports[m])||{};
+    return `<tr><td><b>${m}</b></td>
+    <td><input type="checkbox" id="sh_${m}" ${r.shared?'checked':''}></td>
+    <td><input id="st_${m}" type="number" min="0" value="${r.studies||''}" placeholder="0"></td>
+    <td><input type="checkbox" id="ax_${m}" ${r.aux?'checked':''}></td>
+    <td><input id="hr_${m}" type="number" min="0" value="${r.hours||''}" placeholder="0" oninput="updateTotal()"></td>
+    <td><input id="rm_${m}" value="${r.remarks||''}" placeholder="Remarks"></td></tr>`;
+  }).join('');
+  ['allSection','addSection','settingsSection'].forEach(x=>document.getElementById(x).classList.add('hidden'));
+  document.getElementById('recordSection').classList.remove('hidden'); updateTotal(); window.scrollTo(0,0);
+}
+function updateTotal(){
+  let t=0; MONTHS.forEach(m=>{ t+=Number(document.getElementById('hr_'+m)?.value||0); });
+  const el=document.getElementById('recTotal'); if(el) el.textContent=t;
+}
+function saveRecord(){
+  const p=publishers.find(x=>x.id==currentRecId); if(!p) return;
+  if(!p.reports) p.reports={};
+  MONTHS.forEach(m=>{
+    p.reports[m]={ shared:document.getElementById('sh_'+m).checked, studies:document.getElementById('st_'+m).value,
+      aux:document.getElementById('ax_'+m).checked, hours:document.getElementById('hr_'+m).value,
+      remarks:document.getElementById('rm_'+m).value };
+  });
+  saveLS(); alert('Monthly record saved for '+p.first+' '+p.last); showTab('all'); render();
+}
+function badge(p){
+  let h='';
+  if(p.appt==='Elder') h+='<span class="badge b-elder">Elder</span>';
+  if(p.appt==='Ministerial Servant') h+='<span class="badge b-serv">Ministerial Servant</span>';
+  if(p.priv==='Regular Pioneer') h+='<span class="badge b-reg">Regular Pioneer</span>';
+  if(p.priv==='Auxiliary Pioneer') h+='<span class="badge b-aux">Auxiliary Pioneer</span>';
+  if(p.priv==='Special Pioneer') h+='<span class="badge b-spec">Special Pioneer</span>';
+  if(p.priv==='Field Missionary') h+='<span class="badge b-spec">Field Missionary</span>';
+  return h;
+}
+function totalHours(p){
+  if(!p.reports) return 0;
+  return MONTHS.reduce((s,m)=>s+Number(p.reports[m]?.hours||0),0);
+}
+function render(){
+  const pioneers = publishers.filter(p => ['Regular Pioneer','Auxiliary Pioneer','Special Pioneer','Field Missionary'].includes(p.priv));
+  const elders = publishers.filter(p => p.appt==='Elder' || p.appt==='Ministerial Servant');
+  document.getElementById('totalCount').textContent = publishers.length;
+  document.getElementById('pioneerCount').textContent = pioneers.length;
+  document.getElementById('elderCount').textContent = elders.length;
+  const q=(document.getElementById('searchBox').value||'').toLowerCase();
+  const fg=document.getElementById('filterGroup').value;
+  const fp=document.getElementById('filterPriv').value;
+  let list=publishers.filter(p=>{
+    if(fg && p.group!=fg) return false;
+    if(fp && p.appt!=fp && p.priv!=fp) return false;
+    if(q && !( (p.first+' '+p.last+' '+p.phone+' '+p.group).toLowerCase().includes(q) )) return false;
+    return true;
+  });
+  document.getElementById('showing').textContent='Showing '+list.length+' of '+publishers.length+' publishers';
+  const canEdit = currentRole!=='publisher';
+  const canDel = currentRole==='secretary';
+  document.getElementById('list').innerHTML = list.map(p=>`
+    <div class="pub"><b>${p.first} ${p.last}</b> ${badge(p)}<br>
+    <small style="color:#64748b">Group ${p.group||'-'} • ${p.phone||''} • ${p.gender||''} • ${p.hope||''} • Total Hours: <b>${totalHours(p)}</b></small><br>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+    <button class="btn-green btn-small" style="width:auto" onclick="openRecord('${p.id}')">📋 Record</button>
+    ${canEdit?`<button class="btn-blue btn-small" style="width:auto" onclick="editPub('${p.id}')">✏️ Edit</button>`:''}
+    ${canDel?`<button class="btn-red btn-small" style="width:auto" onclick="delPub('${p.id}')">🗑️ Delete</button>`:''}
+    </div></div>`).join('') || '<p>No publishers yet. Secretary / Appointed Brother can add one.</p>';
+}
+if(currentRole){
+  document.getElementById('welcomeScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+  applyRole();
+}
+render();
+</script>
+</body>
+</html>
