@@ -58,3 +58,50 @@ button{border:0;padding:12px;border-radius:8px;font-size:15px;font-weight:700;cu
 <div class="stat"><b id="pioneerCount">0</b><br>Pioneers</div>
 <div class="stat"><b id="elderCount">0</b><br>Elders /<br>Servants</div>
 </div>
+<!-- TABS -->
+<div class="card" style="display:flex;gap:8px;padding:10px">
+<button class="tab active" id="tabAll" onclick="showTab('all')">📋 All Publishers</button>
+<button class="tab" id="tabAdd" onclick="showTab('add')">➕ Add / Edit</button>
+</div>
+
+<!-- ALL PUBLISHERS -->
+<div id="viewAll" class="card">
+<h2 style="margin:0">All Publishers in the Congregation</h2>
+<input id="search" placeholder="🔍 Search by name, phone, group..." oninput="render()">
+<div class="row">
+<select id="filterGroup" onchange="render()"><option value="">All Groups</option><option>Group 1</option><option>Group 2</option><option>Group 3</option><option>Group 4</option><option>Group 5</option></select>
+<select id="filterPriv" onchange="render()"><option value="">All Privileges</option><option>Publisher</option><option>Auxiliary Pioneer</option><option>Regular Pioneer</option><option>Elder</option><option>Ministerial Servant</option></select>
+</div>
+<p class="muted" id="listInfo">Showing 0 of 0 publishers</p>
+<div id="list"><p>No publishers yet. Tap Add / Edit to add the first one.</p></div>
+<button class="btn-grey" style="width:100%" onclick="exportData()">📦 Export / Backup</button>
+</div>
+
+<!-- ADD / EDIT FORM -->
+<div id="viewAdd" class="card hidden">
+<h2 style="margin:0">Add New Publisher <span class="badge" id="editBadge">New</span></h2>
+<p class="muted">Only Secretary can save. Tap Secretary Login first.</p>
+<input type="hidden" id="editId">
+<div class="row">
+<input id="fName" placeholder="First Name *">
+<input id="lName" placeholder="Last Name *">
+</div>
+<div class="row">
+<select id="fGender"><option value="">Gender</option><option>Brother</option><option>Sister</option></select>
+<input id="fPhone" placeholder="Phone e.g. 0977...">
+</div>
+<div class="row">
+<input id="fGroup" placeholder="Group e.g. Group 1">
+<select id="fPriv"><option>Publisher</option><option>Auxiliary Pioneer</option><option>Regular Pioneer</option><option>Elder</option><option>Ministerial Servant</option></select>
+</div>
+<div class="row">
+<label>Birth Date<input type="date" id="fDob"></label>
+<label>Baptism Date<input type="date" id="fBap"></label>
+</div>
+<textarea id="fAddr" placeholder="Address / Notes"></textarea>
+<div class="row">
+<button class="btn-green" onclick="savePublisher()">💾 Save Publisher</button>
+<button class="btn-grey" onclick="clearForm()">Clear</button>
+</div>
+<p class="muted">To EDIT: Go to All Publishers > Tap Edit on that person.</p>
+</div>
