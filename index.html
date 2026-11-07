@@ -179,6 +179,51 @@ function exportData(){
 }
 render();
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+<!-- SETTINGS - CHANGE SECRETARY PASSWORD -->
+<div class="card" style="margin:14px">
+<h2 style="margin:0">⚙️ Settings - Secretary Password</h2>
+<p class="muted">Only Secretary can change the password. Current default is 1234.</p>
+<input type="password" id="oldPin" placeholder="Enter Current PIN">
+<input type="password" id="newPin" placeholder="Enter New PIN (e.g. 5678)">
+<input type="password" id="confirmPin" placeholder="Confirm New PIN">
+<button class="btn-blue" style="width:100%" onclick="changePin()">🔑 Change Password</button>
+<p class="muted" id="pinMsg"></p>
+</div>
+
+<script>
+// This overrides the old 1234 PIN with the saved one
+function getPin(){ return localStorage.getItem('chipunka_pin') || '1234'; }
+function secretaryLogin(){
+  if(isSecretary){
+    isSecretary=false;
+    document.getElementById('secStatus').textContent='Secretary not logged in';
+    document.getElementById('secBtn').textContent='🔐 Secretary Login';
+    document.getElementById('roleLabel').textContent='👁️ Viewing Mode';
+    render(); return;
+  }
+  let pin = prompt('Secretary PIN:');
+  if(pin===getPin()){
+    isSecretary=true;
+    document.getElementById('secStatus').textContent='✅ Secretary logged in - You can Add / Edit / Delete';
+    document.getElementById('secBtn').textContent='🔓 Logout Secretary';
+    document.getElementById('roleLabel').textContent='✏️ Secretary Mode - Editing Enabled';
+    alert('Welcome Secretary!');
+  } else if(pin!==null){ alert('Wrong PIN.'); }
+  render();
+}
+function changePin(){
+  let oldP=document.getElementById('oldPin').value;
+  let newP=document.getElementById('newPin').value;
+  let conf=document.getElementById('confirmPin').value;
+  if(oldP!==getPin()){ document.getElementById('pinMsg').textContent='❌ Wrong current PIN.'; return; }
+  if(!newP || newP.length<4){ document.getElementById('pinMsg').textContent='❌ New PIN must be at least 4 numbers.'; return; }
+  if(newP!==conf){ document.getElementById('pinMsg').textContent='❌ New PINs do not match.'; return; }
+  localStorage.setItem('chipunka_pin', newP);
+  document.getElementById('pinMsg').textContent='✅ Password changed! New PIN is now saved. Logout and login with new PIN.';
+  document.getElementById('oldPin').value=''; document.getElementById('newPin').value=''; document.getElementById('confirmPin').value='';
+  alert('Password changed successfully! ✅');
+}
+</script>
 </script>
 </body>
 </html>
