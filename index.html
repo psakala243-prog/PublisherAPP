@@ -179,7 +179,6 @@ function exportData(){
 }
 render();
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
-<!-- SETTINGS - CHANGE SECRETARY PASSWORD -->
 <div class="card" style="margin:14px">
 <h2 style="margin:0">⚙️ Settings - Secretary Password</h2>
 <p class="muted">Only Secretary can change the password. Current default is 1234.</p>
@@ -224,5 +223,6 @@ function changePin(){
   alert('Password changed successfully! ✅');
 }
 </script>
+<!-- SETTINGS - CHANGE SECRETARY PASSWORD -->
 </body>
 </html>
