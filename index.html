@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHIPUNKA S-21 - Publisher App</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.jpg">
+<meta name="theme-color" content="#0b4f9c">
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,Arial;margin:0;background:#f2f5f9}
+header{background:#0b4f9c;color:#fff;padding:16px;text-align:center}
+header h1{margin:0;font-size:20px}
+.wrap{max-width:900px;margin:auto;padding:14px}
+.card{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px}
+input,select,textarea{width:100%;padding:11px;border:1px solid #ddd;border-radius:10px;margin:6px 0;font-size:15px}
+button{border:0;border-radius:10px;padding:12px 16px;font-weight:700;cursor:pointer}
+.btn-blue{background:#0b4f9c;color:#fff}
+.btn-green{background:#0e9a4d;color:#fff}
+.btn-grey{background:#e9edf2}
+.btn-red{background:#e11d48;color:#fff}
+.btn-small{padding:7px 10px;font-size:13px}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:700;background:#e8f0ff;color:#0b4f9c}
+.pub{border:1px solid #eee;border-radius:12px;padding:12px;margin-bottom:10px}
+.muted{color:#666;font-size:13px}
+.hidden{display:none}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1;min-width:140px}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tabs button{flex:1;background:#fff;color:#0b4f9c;border:2px solid #0b4f9c}
+.tabs button.active{background:#0b4f9c;color:#fff}
+.stat{flex:1;background:#fff;border-radius:12px;padding:12px;text-align:center}
+.stat b{font-size:22px;color:#0b4f9c}
+</style>
+</head>
+<body>
+<header><h1>CHIPUNKA S-21</h1><p>Congregation Publisher Records</p></header>
+<div class="wrap">
+
+<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+<div><b id="roleLabel">👁️ Viewing Mode</b><br><span class="muted" id="secStatus">Secretary not logged in</span></div>
+<button class="btn-blue" id="secBtn" onclick="secretaryLogin()">🔐 Secretary Login</button>
+</div>
+
+<div style="display:flex;gap:8px">
+<div class="stat"><b id="totalCount">0</b><br>Total Publishers</div>
+<div class="stat"><b id="pioneerCount">0</b><br>Pioneers</div>
+<div class="stat"><b id="elderCount">0</b><br>Elders / Servants</div>
+</div>
+
+<div class="tabs" style="margin-top:12px">
+<button id="tabAll" class="active" onclick="showTab('all')">📋 All Publishers</button>
+<button id="tabAdd" onclick="showTab('add')">➕ Add / Edit</button>
+</div>
+
+<div id="viewAll" class="card">
+<h2 style="margin:0 0 8px">All Publishers in the Congregation</h2>
+<input id="search" placeholder="🔍 Search by name, phone, group..." oninput="render()">
+<div class="row">
+<select id="filterGroup" onchange="render()"><option value="">All Groups</option><option>Group 1</option><option>Group 2</option><option>Group 3</option><option>Group 4</option><option>Group 5</option></select>
+<select id="filterPriv" onchange="render()"><option value="">All Privileges</option><option>Publisher</option><option>Auxiliary Pioneer</option><option>Regular Pioneer</option><option>Elder</option><option>Ministerial Servant</option></select>
+</div>
+<p class="muted" id="listInfo"></p>
+<div id="list"></div>
+<button class="btn-grey" style="width:100%" onclick="exportData()">📤 Export / Backup</button>
+</div>
