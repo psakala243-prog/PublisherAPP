@@ -94,3 +94,91 @@ button{border:0;border-radius:10px;padding:12px 16px;font-weight:700;cursor:poin
 </div>
 
 </div>
+<script>
+let publishers = JSON.parse(localStorage.getItem('chipunka_publishers')||'[]');
+let isSecretary = false;
+const SECRET_PIN = '1234';
+
+function secretaryLogin(){
+  if(isSecretary){
+    isSecretary=false;
+    document.getElementById('secStatus').textContent='Secretary not logged in';
+    document.getElementById('secBtn').textContent='🔐 Secretary Login';
+    document.getElementById('roleLabel').textContent='👁️ Viewing Mode';
+    render(); return;
+  }
+  let pin = prompt('Secretary PIN (default 1234):');
+  if(pin===SECRET_PIN){
+    isSecretary=true;
+    document.getElementById('secStatus').textContent='✅ Secretary logged in - You can Add / Edit / Delete';
+    document.getElementById('secBtn').textContent='🔓 Logout Secretary';
+    document.getElementById('roleLabel').textContent='✏️ Secretary Mode - Editing Enabled';
+    alert('Welcome Secretary!');
+  } else if(pin!==null){ alert('Wrong PIN.'); }
+  render();
+}
+function showTab(t){
+  document.getElementById('viewAll').classList.toggle('hidden', t!=='all');
+  document.getElementById('viewAdd').classList.toggle('hidden', t!=='add');
+  document.getElementById('tabAll').classList.toggle('active', t==='all');
+  document.getElementById('tabAdd').classList.toggle('active', t==='add');
+}
+function savePublisher(){
+  if(!isSecretary){ alert('Only Secretary can save. Tap Secretary Login first.'); secretaryLogin(); return; }
+  let fn=document.getElementById('fName').value.trim();
+  let ln=document.getElementById('lName').value.trim();
+  if(!fn||!ln){ alert('Please enter First Name and Last Name'); return; }
+  let id=document.getElementById('editId').value || Date.now().toString();
+  let obj={id:id,first:fn,last:ln,gender:document.getElementById('fGender').value,phone:document.getElementById('fPhone').value,group:document.getElementById('fGroup').value,priv:document.getElementById('fPriv').value,dob:document.getElementById('fDob').value,bap:document.getElementById('fBap').value,addr:document.getElementById('fAddr').value};
+  let i=publishers.findIndex(p=>p.id===id);
+  if(i>=0) publishers[i]=obj; else publishers.push(obj);
+  localStorage.setItem('chipunka_publishers',JSON.stringify(publishers));
+  clearForm(); showTab('all'); render(); alert('Saved! ✅');
+}
+function editPublisher(id){
+  if(!isSecretary){ alert('Only Secretary can edit. Login first.'); secretaryLogin(); if(!isSecretary) return; }
+  let p=publishers.find(x=>x.id===id); if(!p) return;
+  document.getElementById('editId').value=p.id;
+  document.getElementById('fName').value=p.first;
+  document.getElementById('lName').value=p.last;
+  document.getElementById('fGender').value=p.gender||'';
+  document.getElementById('fPhone').value=p.phone||'';
+  document.getElementById('fGroup').value=p.group||'';
+  document.getElementById('fPriv').value=p.priv||'Publisher';
+  document.getElementById('fDob').value=p.dob||'';
+  document.getElementById('fBap').value=p.bap||'';
+  document.getElementById('fAddr').value=p.addr||'';
+  document.getElementById('editBadge').textContent='Editing: '+p.first+' '+p.last;
+  showTab('add'); window.scrollTo(0,0);
+}
+function deletePublisher(id){
+  if(!isSecretary){ alert('Only Secretary can delete.'); return; }
+  if(!confirm('Delete this publisher?')) return;
+  publishers=publishers.filter(p=>p.id!==id);
+  localStorage.setItem('chipunka_publishers',JSON.stringify(publishers)); render();
+}
+function clearForm(){
+  ['editId','fName','lName','fPhone','fGroup','fDob','fBap','fAddr'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('editBadge').textContent='New';
+}
+function render(){
+  let q=(document.getElementById('search').value||'').toLowerCase();
+  let fg=document.getElementById('filterGroup').value;
+  let fp=document.getElementById('filterPriv').value;
+  let list=publishers.filter(p=> (!q||(p.first+' '+p.last+' '+(p.phone||'')+' '+(p.group||'')).toLowerCase().includes(q)) && (!fg||(p.group||'').includes(fg)) && (!fp||p.priv===fp));
+  list.sort((a,b)=>(a.last||'').localeCompare(b.last||''));
+  document.getElementById('totalCount').textContent=publishers.length;
+  document.getElementById('pioneerCount').textContent=publishers.filter(p=>p.priv.includes('Pioneer')).length;
+  document.getElementById('elderCount').textContent=publishers.filter(p=>p.priv==='Elder'||p.priv==='Ministerial Servant').length;
+  document.getElementById('listInfo').textContent='Showing '+list.length+' of '+publishers.length+' publishers';
+  document.getElementById('list').innerHTML = list.length? list.map(p=>'<div class="pub"><h3>'+p.first+' '+p.last+'</h3><span class="badge">'+(p.priv||'Publisher')+'</span> <span class="badge">'+(p.group||'No Group')+'</span><div class="muted">📞 '+(p.phone||'No phone')+' • '+(p.gender||'')+(p.dob?' • Born: '+p.dob:'')+(p.bap?' • Baptised: '+p.bap:'')+'<br>'+(p.addr||'')+'</div><div style="margin-top:8px;display:flex;gap:8px"><button class="btn-blue btn-small" onclick="editPublisher(\''+p.id+'\')">✏️ Edit</button><button class="btn-red btn-small" onclick="deletePublisher(\''+p.id+'\')">🗑️ Delete</button></div></div>').join('') : '<p>No publishers yet. Tap Add / Edit to add the first one.</p>';
+}
+function exportData(){
+  let blob=new Blob([JSON.stringify(publishers,null,2)],{type:'application/json'});
+  let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='chipunka-publishers-backup.json'; a.click();
+}
+render();
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+</script>
+</body>
+</html>
