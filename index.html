@@ -184,3 +184,29 @@ function clearForm(){
   ['editId','fName','lName','fPhone','fGroup','fDob','fBap','fAddr'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('editBadge').textContent='New';
 }
+function render(){
+  let q=(document.getElementById('search').value||'').toLowerCase();
+  let g=document.getElementById('filterGroup').value;
+  let pv=document.getElementById('filterPriv').value;
+  let list=publishers.filter(p=>{
+    let txt=(p.first+' '+p.last+' '+p.phone+' '+p.group+' '+p.priv).toLowerCase();
+    return txt.includes(q) && (!g||p.group===g) && (!pv||p.priv===pv);
+  });
+  document.getElementById('totalCount').textContent=publishers.length;
+  document.getElementById('pioneerCount').textContent=publishers.filter(p=>p.priv && p.priv.includes('Pioneer')).length;
+  document.getElementById('elderCount').textContent=publishers.filter(p=>p.priv==='Elder'||p.priv==='Ministerial Servant').length;
+  document.getElementById('listInfo').textContent='Showing '+list.length+' of '+publishers.length+' publishers';
+  let h='';
+  list.forEach(p=>{
+    h+='<div class="pub"><b>'+p.first+' '+p.last+'</b> <span class="badge">'+p.priv+'</span><br><span class="muted">'+(p.group||'')+' • '+(p.phone||'No phone')+'</span><br><div style="display:flex;gap:6px;margin-top:8px"><button class="btn-blue btn-small" onclick="editPublisher(\''+p.id+'\')">✏️ Edit</button><button class="btn-red btn-small" onclick="deletePublisher(\''+p.id+'\')">🗑️ Delete</button></div></div>';
+  });
+  document.getElementById('list').innerHTML=h||'<p>No publishers match.</p>';
+}
+function exportData(){
+  let blob=new Blob([JSON.stringify(publishers,null,2)],{type:'application/json'});
+  let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='chipunka-backup.json'; a.click();
+}
+render();
+</script>
+</body>
+</html>
