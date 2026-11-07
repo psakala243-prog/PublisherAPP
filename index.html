@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PublisherAPP - S-21 Linked</title>
+<style>
+*{box-sizing:border-box}body{font-family:system-ui,Arial;margin:0;background:#f3f4f6;color:#111;padding:14px}
+.card{background:#fff;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 2px 8px #0001}
+input,select{width:100%;padding:11px;border:1px solid #ddd;border-radius:10px;margin:6px 0;font-size:15px}
+button{padding:11px 14px;border:0;border-radius:10px;font-weight:700;cursor:pointer;margin:4px 2px}
+.btn-green{background:#16a34a;color:#fff}.btn-blue{background:#2563eb;color:#fff}.btn-red{background:#dc2626;color:#fff}.btn-gray{background:#e5e7eb}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}.tabs button{background:#e5e7eb}.tabs button.active{background:#111;color:#fff}
+.badge{padding:3px 8px;border-radius:20px;font-size:12px;background:#dcfce7}
+.hidden{display:none}.small{font-size:13px;color:#666}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #ccc;padding:6px;text-align:center}th{background:#f3f4f6}
+table input{padding:6px;margin:0;text-align:center}
+.profilePic{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #ddd}
+@media print{body *{visibility:hidden}#printArea,#printArea *{visibility:visible}#printArea{position:absolute;left:0;top:0;width:100%}}
+</style></head>
+<body>
+<div id="printArea" style="display:none"></div>
+<div id="loginScreen" class="card">
+<h2>📖 PublisherAPP - Login</h2>
+<p class="small">Same link for everyone.</p>
+<label>Your ID</label><input id="loginId" placeholder="e.g. PSAKALA01 or SECRETARY">
+<label>Password</label><input id="loginPass" type="password" placeholder="Password">
+<button class="btn-blue" onclick="doLogin()" style="width:100%">Login</button>
+<p id="loginMsg" class="small"></p>
+<p class="small">First time? Secretary: ID = <b>SECRETARY</b> / Password = <b>admin123</b></p>
+</div>
+<div id="appScreen" class="hidden">
+<div style="display:flex;justify-content:space-between;align-items:center"><h2>📖 PublisherAPP</h2><button class="btn-red" onclick="logout()">Logout</button></div>
+<p id="whoLine" class="small"></p>
+<div class="tabs">
+<button id="tabBtn-list" class="active" onclick="showTab('list')">📋 List</button>
+<button id="tabBtn-add" onclick="showTab('add')">➕ Record (S-21)</button>
+<button id="tabBtn-users" onclick="showTab('users')">👥 Users</button>
+<button id="tabBtn-settings" onclick="showTab('settings')">⚙️ Settings</button>
+</div>
+<div id="tab-list" class="card">
+<input id="searchBox" placeholder="🔍 Search name or ID..." oninput="renderList()">
+<button class="btn-green" onclick="window.print()">🖨️ Print List</button>
+<button class="btn-gray" onclick="loadData()">🔄 Refresh (Sync)</button>
+<p id="showing" class="small"></p>
+<div id="groupTotals"></div>
+<div id="list"></div>
+</div>
+<div id="tab-add" class="card hidden">
+<h3>CONGREGATION'S PUBLISHER RECORD</h3>
+<div style="text-align:center"><img id="picPreview" class="profilePic" src="" style="display:none"><br>
+<label>Profile Picture - Anyone can upload</label><input type="file" id="fPic" accept="image/*" onchange="handlePic(event)"></div>
+<input id="fName" placeholder="Name *">
+<input id="fId" placeholder="Publisher ID * e.g. PSAKALA01">
+<label>Date of Birth</label><input id="fDob" type="date">
+<label>Date of Baptism</label><input id="fBap" type="date">
+<label>Sex</label><select id="fSex"><option value="">Select</option><option>Male</option><option>Female</option></select>
+<label>Hope</label><select id="fHope"><option value="">Select</option><option>Other sheep</option><option>Anointed</option></select>
+<label>Appointment - Elder / Ministerial Servant</label><select id="fAppoint"><option value="">None</option><option>Elder</option><option>Ministerial servant</option></select>
+<label>Pioneer Status - Can be Pioneer + Elder at same time</label><select id="fPioneer"><option value="Publisher">Publisher</option><option value="Auxiliary Pioneer">Auxiliary Pioneer</option><option value="Regular Pioneer">Regular Pioneer</option><option value="Special Pioneer">Special Pioneer</option><option value="Field Missionary">Field Missionary</option></select>
+<label>Field Service Group</label><input id="fGroup" placeholder="e.g. Group 1">
+<label>Service Year</label><select id="fYear"><option>2025-2026</option><option>2026-2027</option><option>2024-2025</option></select>
+<p class="small"><b>Monthly Report - Sept to Aug:</b></p>
+<div style="overflow-x:auto"><table>
+<tr><th>Month</th><th>Shared</th><th>Studies</th><th>Aux Pio.</th><th>Hours</th><th>Remarks</th></tr>
+<tbody id="monthsBody"></tbody>
+<tr><td><b>Total</b></td><td id="totShared">-</td><td id="totStudies">0</td><td id="totAux">-</td><td id="totHours">0</td><td></td></tr>
+</table></div>
+<p id="lockMsg" class="small" style="color:#dc2626"></p>
+<button class="btn-green" onclick="saveRecord()">💾 Save (Syncs to all)</button>
+<button class="btn-blue" onclick="printOne(document.getElementById('fId').value)">🖨️ Print This S-21</button>
+<button class="btn-gray" onclick="clearForm()">Clear</button>
+</div>
+<div id="tab-users" class="card hidden">
+<h3>Create Login</h3>
+<p class="small">Secretary + Appointed Brother can create accounts.</p>
+<input id="uId" placeholder="New ID e.g. JOHN01">
+<input id="uName" placeholder="Full Name">
+<input id="uPass" placeholder="Password e.g. 1234">
+<label>Role</label><select id="uRole"><option value="publisher">Publisher</option><option value="appointed">Appointed Brother</option><option value="secretary">Secretary</option></select>
+<button class="btn-blue" onclick="createUser()">Create Account</button>
+<div id="usersList"></div>
+</div>
+<div id="tab-settings" class="card hidden">
+<h3>Settings</h3>
+<label>Change Secretary Password</label><input id="newSecPass" type="password" placeholder="New Secretary Password">
+<button class="btn-blue" onclick="changeSecPass()">Change Password</button>
+<p class="small">Cloud: Firebase Firestore - publisherapp-f38af. All devices sync.</p>
+</div>
+</div>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
+import {getFirestore, doc, getDoc, setDoc, onSnapshot} from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
+const firebaseConfig={apiKey:"AIzaSyBobbLJmK7HbdPlN7bNhFP9flkhafvkapA",authDomain:"publisherapp-f38af.firebaseapp.com",projectId:"publisherapp-f38af",storageBucket:"publisherapp-f38af.firebasestorage.app",messagingSenderId:"8811787300",appId:"1:8811787300:web:b3604bc37bc1fa809f54b1"};
+const app=initializeApp(firebaseConfig); const db=getFirestore(app);
+let publishers=[], users=[], currentUser=null, currentRole='', currentPic='';
+const mainDoc=doc(db,"app","main");
+const MONTHS=["September","October","November","December","January","February","March","April","May","June","July","August"];
+async function ensureData(){let s=await getDoc(mainDoc); if(!s.exists()){await setDoc(mainDoc,{publishers:[],users:[{id:"SECRETARY",name:"Secretary",pass:"admin123",role:"secretary"}]});}}
+async function loadData(){await ensureData(); onSnapshot(mainDoc,(s)=>{if(s.exists()){let d=s.data(); publishers=d.publishers||[]; users=d.users||[]; renderList(); renderUsers();}});}
+async function saveCloud(){await setDoc(mainDoc,{publishers,users});}
+function isLeader(){return currentRole==='secretary'||currentRole==='appointed';}
+function buildMonths(data){let h=''; MONTHS.forEach((m,i)=>{let d=(data&&data[i])||{}; h+=`<tr><td>${m}</td><td><input type="checkbox" id="mShared${i}" ${d.shared?'checked':''}></td><td><input type="number" id="mStud${i}" value="${d.studies||''}"></td><td><input type="checkbox" id="mAux${i}" ${d.aux?'checked':''}></td><td><input type="number" id="mHours${i}" value="${d.hours||''}"></td><td><input id="mRem${i}" value="${d.remarks||''}"></td></tr>`;}); document.getElementById('monthsBody').innerHTML=h; updateTotals();}
+function updateTotals(){let th=0,ts=0,sh=0,ax=0; MONTHS.forEach((m,i)=>{th+=+document.getElementById('mHours'+i).value||0; ts+=+document.getElementById('mStud'+i).value||0; if(document.getElementById('mShared'+i).checked) sh++; if(document.getElementById('mAux'+i).checked) ax++;}); document.getElementById('totHours').innerText=th; document.getElementById('totStudies').innerText=ts; document.getElementById('totShared').innerText=sh; document.getElementById('totAux').innerText=ax;}
+document.addEventListener('input',e=>{if(e.target.id.startsWith('m')) updateTotals();});
+buildMonths(null);
+window.handlePic=function(e){let f=e.target.files[0]; if(!f) return; let r=new FileReader(); r.onload=function(ev){currentPic=ev.target.result; let img=document.getElementById('picPreview'); img.src=currentPic; img.style.display='block';}; r.readAsDataURL(f);};
+window.doLogin=async function(){let id=document.getElementById('loginId').value.trim().toUpperCase(); let pass=document.getElementById('loginPass').value.trim(); await ensureData(); let s=await getDoc(mainDoc); let d=s.data(); users=d.users||[]; publishers=d.publishers||[]; let u=users.find(x=>x.id===id && x.pass===pass); if(!u){document.getElementById('loginMsg').innerText="❌ Wrong ID or Password."; return;} currentUser=u; currentRole=u.role; document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('appScreen').classList.remove('hidden'); document.getElementById('whoLine').innerText="Logged in as: "+u.name+" ("+u.id+" - "+u.role+") • Cloud Synced ✓"; if(!isLeader()){document.getElementById('tabBtn-users').style.display='none'; document.getElementById('tabBtn-settings').style.display='none';} fillFormForPublisher(); loadData();};
+window.logout=function(){location.reload();};
+window.showTab=function(t){['list','add','users','settings'].forEach(x=>{document.getElementById('tab-'+x).classList.toggle('hidden',x!==t); document.getElementById('tabBtn-'+x).classList.toggle('active',x===t);});};
+function fillFormForPublisher(){if(isLeader()) return; let p=publishers.find(x=>x.id===currentUser.id); if(p) loadIntoForm(p); }
+function loadIntoForm(p){document.getElementById('fName').value=p.name||''; document.getElementById('fId').value=p.id||''; document.getElementById('fDob').value=p.dob||''; document.getElementById('fBap').value=p.bap||''; document.getElementById('fSex').value=p.sex||''; document.getElementById('fHope').value=p.hope||''; document.getElementById('fAppoint').value=p.appoint||''; document.getElementById('fPioneer').value=p.pioneer||'Publisher'; document.getElementById('fGroup').value=p.group||''; document.getElementById('fYear').value=p.year||'2025-2026'; currentPic=p.pic||''; let img=document.getElementById('picPreview'); if(currentPic){img.src=currentPic; img.style.display='block';} else img.style.display='none'; buildMonths(p.months); checkLock(p);}
+function checkLock(p){let msg=document.getElementById('lockMsg'); if(!p||!p._savedAt){msg.innerText='';return;} if(!isLeader() && (Date.now()-p._savedAt)>86400000){msg.innerText='🔒 Locked - over 1 day old. Only Secretary / Appointed Brother can edit. You cannot edit anymore.';} else msg.innerText='';}
+window.clearForm=function(){['fName','fId','fDob','fBap','fGroup'].forEach(id=>document.getElementById(id).value=''); document.getElementById('fSex').value=''; document.getElementById('fHope').value=''; document.getElementById('fAppoint').value=''; document.getElementById('fPioneer').value='Publisher'; currentPic=''; document.getElementById('picPreview').style.display='none'; buildMonths(null);};
+window.saveRecord=async function(){let name=document.getElementById('fName').value.trim(); let id=document.getElementById('fId').value.trim().toUpperCase(); if(!name||!id){alert('Name + ID required'); return;} if(!isLeader()){id=currentUser.id;} let existing=publishers.find(x=>x.id===id); if(existing && !isLeader() && existing._savedAt && (Date.now()-existing._savedAt)>86400000){alert('🔒 Locked - You cannot edit after 1 day. Only Secretary / Appointed Brother can edit.'); return;} let months=MONTHS.map((m,i)=>({month:m,shared:document.getElementById('mShared'+i).checked,studies:+document.getElementById('mStud'+i).value||0,aux:document.getElementById('mAux'+i).checked,hours:+document.getElementById('mHours'+i).value||0,remarks:document.getElementById('mRem'+i).value})); let rec={id,name,dob:document.getElementById('fDob').value,bap:document.getElementById('fBap').value,sex:document.getElementById('fSex').value,hope:document.getElementById('fHope').value,appoint:document.getElementById('fAppoint').value,pioneer:document.getElementById('fPioneer').value,group:document.getElementById('fGroup').value,year:document.getElementById('fYear').value,months,pic:currentPic,totalHours:months.reduce((a,x)=>a+x.hours,0),totalStudies:months.reduce((a,x)=>a+x.studies,0),_savedAt: existing && !isLeader() ? existing._savedAt : Date.now()}; if(existing){Object.assign(existing,rec);} else publishers.push(rec); await saveCloud(); alert('✅ Saved & Synced!'); showTab('list');};
+window.renderList=function(){let q=(document.getElementById('searchBox').value||'').toLowerCase(); let list=publishers.filter(p=> (isLeader() || p.id===currentUser.id) && (p.name.toLowerCase().includes(q)||p.id.toLowerCase().includes(q))); let aux=list.filter(p=>p.pioneer==='Auxiliary Pioneer'); let reg=list.filter(p=>p.pioneer==='Regular Pioneer'); let pub=list.filter(p=>!p.pioneer||p.pioneer==='Publisher'); let g=(arr)=>arr.length+' persons • '+arr.reduce((a,p)=>a+(+p.totalHours||0),0)+' Hours • '+arr.reduce((a,p)=>a+(+p.totalStudies||0),0)+' Studies'; document.getElementById('groupTotals').innerHTML=`<div class="card" style="background:#f0fdf4"><b>📊 TOTALS BY GROUP</b><br>🔹 Auxiliary Pioneers: ${g(aux)}<br>🔹 Regular Pioneers: ${g(reg)}<br>🔹 Publishers: ${g(pub)}<br><b>Total All: ${list.length} persons • ${list.reduce((a,p)=>a+(+p.totalHours||0),0)} Hours</b></div>`; document.getElementById('showing').innerText="Showing "+list.length+" of "+publishers.length; document.getElementById('list').innerHTML=list.map(p=>`<div class="card">${p.pic?`<img src="${p.pic}" class="profilePic">`:''}<br><b>${p.name}</b> (${p.id})<br><span class="small">${p.appoint||''} ${p.appoint&&p.pioneer&&p.pioneer!=='Publisher'?' + ':''}${p.pioneer||'Publisher'} • ${p.sex||''} • ${p.hope||''}</span><br><span class="small">Group: ${p.group||''} • DOB: ${p.dob||''} • Baptism: ${p.bap||''}</span><br><span class="small">Total Hours: ${p.totalHours||0} • Total Studies: ${p.totalStudies||0}</span><br><button class="btn-blue" onclick="editPub('${p.id}')">View / Edit</button> <button class="btn-green" onclick="printOne('${p.id}')">🖨️ Print S-21</button> ${isLeader()?`<button class="btn-red" onclick="delPub('${p.id}')">Delete</button>`:''}</div>`).join('')||'<p>No records yet</p>';};
+window.editPub=function(id){let p=publishers.find(x=>x.id===id); if(!p) return; if(!isLeader() && p._savedAt && (Date.now()-p._savedAt)>86400000){alert('🔒 Locked - You cannot edit after 1 day. Only Secretary / Appointed Brother can edit.'); return;} loadIntoForm(p); showTab('add');};
+window.printOne=function(id){let p=publishers.find(x=>x.id===id); if(!p){alert('Save first, then print'); return;} let rows=p.months?p.months.map(m=>`<tr><td>${m.month}</td><td>${m.shared?'☑':'☐'}</td><td>${m.studies||''}</td><td>${m.aux?'☑':'☐'}</td><td>${m.hours||''}</td><td>${m.remarks||''}</td></tr>`).join(''):'<tr><td colspan=6>No monthly data</td></tr>'; let el=document.getElementById('printArea'); el.style.display='block'; el.innerHTML=`<div style="font-family:Arial;padding:10px"><div style="text-align:center"><h2>CONGREGATION'S PUBLISHER RECORD</h2></div>${p.pic?`<img src="${p.pic}" style="width:90px;height:90px;object-fit:cover;border-radius:50%">`:''}<p><b>Name:</b> ${p.name}<br><b>Date of birth:</b> ${p.dob||''} &nbsp; <b>Date of baptism:</b> ${p.bap||''}<br><b>Sex:</b> ${p.sex||''} &nbsp; <b>Hope:</b> ${p.hope||''}<br><b>Appointment:</b> ${p.appoint||'None'} &nbsp; <b>Pioneer:</b> ${p.pioneer||'Publisher'} &nbsp; <b>Group:</b> ${p.group||''} &nbsp; <b>Service Year:</b> ${p.year||''}</p><table border=1 cellspacing=0 cellpadding=6 style="width:100%;border-collapse:collapse"><tr><th>Service Year</th><th>Shared in Ministry</th><th>Bible Studies</th><th>Auxiliary Pioneer</th><th>Hours</th><th>Remarks</th></tr>${rows}<tr><td><b>Total</b></td><td></td><td><b>${p.totalStudies||0}</b></td><td></td><td><b>${p.totalHours||0}</b></td><td></td></tr></table><p style="font-size:12px">Printed from PublisherAPP - ${new Date().toLocaleDateString()}</p></div>`; setTimeout(()=>{window.print(); el.style.display='none';},200);};
+window.delPub=async function(id){if(!confirm('Delete '+id+'?')) return; publishers=publishers.filter(x=>x.id!==id); await saveCloud();};
+window.createUser=async function(){if(!isLeader()){alert('Only Secretary / Appointed'); return;} let id=document.getElementById('uId').value.trim().toUpperCase(); let name=document.getElementById('uName').value.trim(); let pass=document.getElementById('uPass').value.trim(); let role=document.getElementById('uRole').value; if(!id||!name||!pass){alert('All fields required'); return;} if(users.find(x=>x.id===id)){alert('ID already exists'); return;} users.push({id,name,pass,role}); await saveCloud(); alert('✅ Created: '+id+' / '+pass+' Role: '+role); document.getElementById('uId').value=''; document.getElementById('uName').value=''; document.getElementById('uPass').value='';};
+window.renderUsers=function(){if(!isLeader()) return; document.getElementById('usersList').innerHTML='<h4>All Logins</h4>'+users.map(u=>`<div class="card"><b>${u.id}</b> - ${u.name} (${u.role})<br><span class="small">Password: ${u.pass}</span></div>`).join('');};
+window.changeSecPass=async function(){let np=document.getElementById('newSecPass').value.trim(); if(!np){alert('Enter new password'); return;} let u=users.find(x=>x.role==='secretary'); if(u) u.pass=np; await saveCloud(); alert('Secretary password changed');};
+window.loadData=loadData;
+</script></body></html>
