@@ -64,3 +64,33 @@ button{border:0;border-radius:10px;padding:12px 16px;font-weight:700;cursor:poin
 <div id="list"></div>
 <button class="btn-grey" style="width:100%" onclick="exportData()">📤 Export / Backup</button>
 </div>
+<!-- ADD / EDIT FORM -->
+<div id="viewAdd" class="card hidden">
+<h2 style="margin:0">Add New Publisher <span class="badge" id="editBadge">New</span></h2>
+<p class="muted">Only Secretary can save. Tap Secretary Login first.</p>
+<input type="hidden" id="editId">
+<div class="row">
+<input id="fName" placeholder="First Name *">
+<input id="lName" placeholder="Last Name *">
+</div>
+<div class="row">
+<select id="fGender"><option value="">Gender</option><option>Brother</option><option>Sister</option></select>
+<input id="fPhone" placeholder="Phone e.g. 0977...">
+</div>
+<div class="row">
+<input id="fGroup" placeholder="Group e.g. Group 1">
+<select id="fPriv"><option>Publisher</option><option>Auxiliary Pioneer</option><option>Regular Pioneer</option><option>Elder</option><option>Ministerial Servant</option></select>
+</div>
+<div class="row">
+<label>Birth Date<input type="date" id="fDob"></label>
+<label>Baptism Date<input type="date" id="fBap"></label>
+</div>
+<textarea id="fAddr" placeholder="Address / Notes"></textarea>
+<div class="row">
+<button class="btn-green" onclick="savePublisher()">💾 Save Publisher</button>
+<button class="btn-grey" onclick="clearForm()">Clear</button>
+</div>
+<p class="muted">To EDIT: Go to All Publishers > Tap Edit on that person.</p>
+</div>
+
+</div>
