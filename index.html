@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chipunka Congregation Publisher Records</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f0f4f8;margin:0;padding:0}
+.header{background:#1a5fb4;color:#fff;padding:18px 14px;text-align:center;position:sticky;top:0;z-index:10}
+.header h1{margin:0;font-size:22px}
+.card{background:#fff;margin:12px;border-radius:12px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>*{flex:1;min-width:140px}
+input,select,textarea{width:100%;padding:11px;margin:6px 0;border:1px solid #ccc;border-radius:8px;font-size:15px}
+button{border:0;padding:12px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer}
+.btn-blue{background:#1a5fb4;color:#fff}
+.btn-grey{background:#e9edf2;color:#333}
+.btn-green{background:#2e9e5b;color:#fff}
+.btn-red{background:#e53935;color:#fff}
+.btn-small{padding:8px 12px;font-size:13px}
+.badge{background:#e8f0fe;color:#1a5fb4;padding:4px 8px;border-radius:20px;font-size:12px;font-weight:700}
+.muted{color:#666;font-size:13px}
+.hidden{display:none!important}
+.tab{flex:1;padding:12px;background:#e9edf2;color:#333}
+.tab.active{background:#1a5fb4;color:#fff}
+.stat{flex:1;background:#fff;border-radius:12px;padding:12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.stat b{font-size:24px;color:#1a5fb4}
+.pub{border:1px solid #eee;border-radius:10px;padding:12px;margin:10px 0}
+</style>
+</head>
+<body>
+<div class="header"><h1>Congregation Publisher Records</h1><p style="margin:4px 0 0;opacity:.9">Chipunka Congregation</p></div>
+
+<!-- SECRETARY CARD - SETTINGS ON LEFT -->
+<div class="card">
+<h2 style="margin:0">✏️ <span id="roleLabel">Secretary Mode - Editing Enabled</span></h2>
+<p class="muted" id="secStatus">Secretary logged in - You can Add / Edit / Delete</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn-grey" style="flex:1" onclick="document.getElementById('settingsBox').classList.toggle('hidden')">⚙️ Settings</button>
+<button class="btn-blue" id="secBtn" style="flex:1" onclick="secretaryLogin()">🔐 Secretary Login</button>
+</div>
+
+<!-- SETTINGS BOX - INSIDE SECRETARY, HIDDEN UNTIL YOU TAP SETTINGS -->
+<div id="settingsBox" class="hidden" style="margin-top:12px;background:#f7f9fc;padding:12px;border-radius:10px;border:1px solid #ddd">
+<h3 style="margin:0">⚙️ Settings - Change Secretary Password</h3>
+<p class="muted">Default PIN is 1234. Change it here.</p>
+<input type="password" id="oldPin" placeholder="Enter Current PIN">
+<input type="password" id="newPin" placeholder="Enter New PIN (min 4 numbers)">
+<input type="password" id="confirmPin" placeholder="Confirm New PIN">
+<button class="btn-blue" style="width:100%" onclick="changePin()">🔑 Change Password</button>
+<p class="muted" id="pinMsg"></p>
+</div>
+</div>
+
+<div class="card" style="display:flex;gap:10px">
+<div class="stat"><b id="totalCount">0</b><br>Total<br>Publishers</div>
+<div class="stat"><b id="pioneerCount">0</b><br>Pioneers</div>
+<div class="stat"><b id="elderCount">0</b><br>Elders /<br>Servants</div>
+</div>
