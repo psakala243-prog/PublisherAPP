@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PublisherAPP - S-21 Linked</title>
+<style>
+*{box-sizing:border-box}body{font-family:system-ui,Arial;margin:0;background:#f3f4f6;color:#111;padding:14px;padding-bottom:60px}
+.card{background:#fff;border-radius:14px;padding:16px;margin:12px 0;box-shadow:0 2px 8px #0001}
+input,select{width:100%;padding:11px;border:1px solid #ddd;border-radius:10px;margin:6px 0;font-size:15px}
+button{padding:11px 14px;border:0;border-radius:10px;font-weight:700;cursor:pointer;margin:4px 2px}
+.btn-green{background:#16a34a;color:#fff}.btn-blue{background:#2563eb;color:#fff}.btn-red{background:#dc2626;color:#fff}.btn-gray{background:#e5e7eb}
+.hidden{display:none}.small{font-size:13px;color:#666}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #ccc;padding:6px;text-align:center}th{background:#f3f4f6}
+table input{padding:6px;margin:0;text-align:center}
+.profilePic{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #ddd}
+.congTitle{text-align:center;background:#111;color:#fff;padding:12px;border-radius:12px;margin:0 0 10px 0}
+.congTitle h1{margin:0;font-size:20px}.congTitle p{margin:4px 0 0 0;font-size:13px;opacity:.8}
+.greetBox{background:#fef9c3;border:1px solid #facc15;border-radius:12px;padding:10px;margin:10px 0;font-size:15px;font-weight:700;text-align:center}
+.tabs-label{font-size:11px;font-weight:700;color:#666;margin:12px 0 4px 2px;letter-spacing:1px}
+.tabs{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
+.tabs button{background:#fff;border:1px solid #ddd;border-radius:12px;padding:12px 4px;font-size:13px;color:#111;margin:0}
+.tabs button.active{background:#111;color:#fff;border-color:#111}
+#sideMenu{background:#fff;border:1px solid #ddd;border-radius:14px;padding:12px;margin:0 0 12px 0;box-shadow:0 4px 12px #0002}
+.footerHelp{position:fixed;bottom:0;left:0;right:0;background:#111;color:#fff;text-align:center;padding:12px;font-size:14px;font-weight:700;z-index:30}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+.topbar .hamb{font-size:22px;background:#111;color:#fff;width:40px;height:40px;border-radius:10px;padding:0;margin:0;line-height:1}
+.topbar .dots{font-size:26px;background:#fff;border:1px solid #ddd;width:40px;height:40px;border-radius:10px;padding:0;margin:0;line-height:1;color:#111}
+.dotMenu{position:absolute;top:58px;right:14px;background:#fff;border:1px solid #ddd;border-radius:12px;box-shadow:0 6px 16px #0003;width:230px;z-index:50;padding:6px}
+.dotMenu button{width:100%;text-align:left;background:#fff;color:#111;margin:0;border-radius:8px;font-size:15px}
+.dotMenu button:hover{background:#f3f4f6}
+.dotMenu .lbl{font-size:11px;font-weight:700;color:#888;padding:6px 6px 2px}
+.pubCard{user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.pubActions{display:none}.pubActions.show{display:block}
+.dashGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dashGrid button{padding:18px 8px;font-size:15px;background:#fff;border:1px solid #ddd;color:#111}
+.dashGrid button.active{background:#111;color:#fff}
+.homeGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.homeGrid button{padding:20px 8px;font-size:15px}
+@media(max-width:400px){.tabs{grid-template-columns:1fr 1fr 1fr}.tabs button{font-size:12px}}
+@media print{body *{visibility:hidden}#printArea,#printArea *{visibility:visible}#printArea{position:absolute;left:0;top:0;width:100%} .footerHelp{display:none}}
+</style></head>
+<body>
+<div class="congTitle"><h1>📖 CHIPUNKA CONGREGATION</h1><p>PublisherAPP - Congregation's Publisher Record (S-21)</p></div>
+<div id="printArea" style="display:none"></div>
+<div id="loginScreen" class="card">
+<h2>📖 PublisherAPP - Login</h2>
+<p class="small">Same link for everyone - Chipunka Congregation.</p>
+<label>Your ID</label><input id="loginId" placeholder="e.g. PSAKALA01 or SECRETARY">
+<label>Password</label><input id="loginPass" type="password" placeholder="Password">
+<button class="btn-blue" onclick="doLogin()" style="width:100%">Login</button>
+<p id="loginMsg" class="small"></p>
+<p class="small">First time? Secretary: ID = <b>SECRETARY</b> / Password = <b>admin123</b></p>
+</div>
+<div id="appScreen" class="hidden" style="position:relative">
+<div class="topbar">
+<button class="hamb" onclick="toggleMenu()">☰</button>
+<h2 style="margin:0">📖 PublisherAPP</h2>
+<button class="dots" onclick="toggleDotMenu()">⋮</button>
+</div>
+<div id="dotMenu" class="dotMenu hidden">
+<button onclick="showTab('home');toggleDotMenu()">🏠 &nbsp; Home</button>
+<div class="lbl">📄 ALL S-21s</div>
+<button onclick="showTab('s21');toggleDotMenu()">📄 &nbsp; All S-21s</button>
+<div class="lbl">📊 REPORTS - SECRETARY + APPOINTED ONLY</div>
+<button onclick="showReport('group');toggleDotMenu()">📊 &nbsp; Totals by Group</button>
+<button onclick="showReport('counts');toggleDotMenu()">👥 &nbsp; Congregation Counts</button>
+<button onclick="showReport('month');toggleDotMenu()">📖 &nbsp; Totals Per Month</button>
+<button onclick="showReport('pioneers');toggleDotMenu()">🟢🟡 &nbsp; Regular + Auxiliary Pioneers</button>
+<div class="lbl">📊 DASHBOARD</div>
+<button onclick="showTab('dashboard');toggleDotMenu()">📊 &nbsp; Dashboard</button>
+<button onclick="openWhatsApp();toggleDotMenu()">🟢 &nbsp; WhatsApp Secretary</button>
+<button onclick="logout()">🚪 &nbsp; Logout</button>
+</div>
+<div id="greetingBox" class="greetBox"></div>
+<p id="whoLine" class="small"></p>
+<div id="sideMenu" class="hidden">
+<div class="tabs-label">🏠 HOME</div>
+<div class="tabs">
+<button id="tabBtn-home" class="active" onclick="showTab('home')">🏠<br>Home</button>
+<button id="tabBtn-dashboard" onclick="showTab('dashboard')">📊<br>Dashboard</button>
+<button id="tabBtn-s21" onclick="showTab('s21')">📄<br>All S-21s</button>
+<button onclick="openWhatsApp()">🟢<br>WhatsApp</button>
+</div>
+<div class="tabs-label">📖 MY WORK</div>
+<div class="tabs">
+<button id="tabBtn-add" onclick="showTab('add')">➕<br>Record</button>
+<button id="tabBtn-meetings" onclick="showTab('meetings')">📅<br>Meetings</button>
+<button id="tabBtn-territory" onclick="showTab('territory')">🗺️<br>Territory</button>
+</div>
+<div class="tabs-label">⚙️ CONGREGATION</div>
+<div class="tabs">
+<button id="tabBtn-events" onclick="showTab('events')">🎉<br>Events</button>
+<button id="tabBtn-reminders" onclick="showTab('reminders')">🔔<br>Reminders</button>
+<button id="tabBtn-users" onclick="showTab('users')">👥<br>Users</button>
+<button id="tabBtn-settings" onclick="showTab('settings')">⚙️<br>Settings</button>
+</div>
+</div><div id="tab-home" class="card">
+<h3>🏠 Home - Chipunka Congregation</h3>
+<p class="small">Welcome! Choose what you want to do. List is cut - use All S-21s instead.</p>
+<div class="homeGrid">
+<button class="btn-blue" onclick="showTab('s21')">📄<br>All S-21s</button>
+<button class="btn-green" onclick="showTab('add')">➕<br>My Record</button>
+<button onclick="showTab('dashboard')">📊<br>Dashboard</button>
+<button onclick="showTab('meetings')">📅<br>Meetings</button>
+<button onclick="showTab('territory')">🗺️<br>Territory</button>
+<button onclick="showTab('events')">🎉<br>Events</button>
+<button onclick="showTab('reminders')">🔔<br>Reminders</button>
+<button class="btn-green" onclick="openWhatsApp()">🟢<br>WhatsApp Secretary</button>
+</div>
+<p class="small">💡 Long-press a name for 4 seconds in All S-21s to show Print / View / Delete.</p>
+<div id="homeCounts" class="small"></div>
+</div>
+<div id="tab-report" class="card hidden">
+<h3 id="reportTitle">📊 Report</h3>
+<p class="small" style="color:#dc2626">🔒 Secretary + Appointed Brother Only</p>
+<div id="reportBox"></div>
+<button class="btn-gray" onclick="showTab('home')">⬅ Back to Home</button>
+</div>
+<div id="tab-dashboard" class="card hidden">
+<h3>📊 DASHBOARD - Chipunka Congregation</h3>
+<div class="dashGrid">
+<button id="dashBtn-cleaning" onclick="showDash('cleaning')">🧹<br>Cleaning Schedule</button>
+<button id="dashBtn-s30" onclick="showDash('s30')">📋<br>S-30</button>
+<button id="dashBtn-talks" onclick="showDash('talks')">🎤<br>Bible Talks Schedule</button>
+<button id="dashBtn-av" onclick="showDash('av')">🎬<br>AUDIO / VIDEO DEPARTMENT</button>
+</div>
+<div id="dash-cleaning" class="hidden">
+<h4>🧹 Cleaning Schedule</h4>
+<p class="small">Secretary + Appointed Brother can edit + upload. Everyone can view.</p>
+<p id="cleanSaved" class="small" style="color:#16a34a;font-weight:700"></p>
+<label>Week / Date</label><input id="cleanWeek" placeholder="e.g. Week 1 - 10 Nov 2026">
+<label>Group / Names</label><input id="cleanGroup" placeholder="e.g. Group 1 - John, Mary...">
+<label>Area To Clean</label><input id="cleanArea" placeholder="e.g. Main Hall, Toilets, Yard">
+<button id="addCleanBtn" class="btn-blue" onclick="addCleaning()">➕ Add Cleaning</button>
+<div id="cleanList"></div>
+<button id="saveCleanBtn" class="btn-green" onclick="saveCleaning()">💾 Save Cleaning Schedule</button>
+<div class="card" style="background:#eff6ff"><b>📎 Upload Cleaning PDF / Doc</b><br><label>Title</label><input id="cleanFileTitle" placeholder="e.g. Cleaning Roster - November"><label>File</label><input type="file" id="cleanFile" accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx"><button class="btn-blue" onclick="uploadFileGeneric('cleanFiles','cleanFileTitle','cleanFile','cleanFilesList')">📤 Upload</button><div id="cleanFilesList"></div></div>
+</div>
+<div id="dash-s30" class="hidden">
+<h4>📋 S-30 - Congregation Monthly Report</h4>
+<p class="small">Secretary + Appointed Brother can edit + upload. Everyone can view.</p>
+<p id="s30Saved" class="small" style="color:#16a34a;font-weight:700"></p>
+<label>Month</label><select id="s30Month"><option>September</option><option>October</option><option>November</option><option>December</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option></select>
+<label>Service Year</label><select id="s30Year"><option>2025-2026</option><option>2026-2027</option></select>
+<label>Publishers Reporting</label><input id="s30Pub" type="number" placeholder="e.g. 45">
+<label>Regular Pioneers Reporting</label><input id="s30Reg" type="number" placeholder="e.g. 7">
+<label>Auxiliary Pioneers Reporting</label><input id="s30Aux" type="number" placeholder="e.g. 2">
+<label>Total Hours</label><input id="s30Hours" type="number" placeholder="e.g. 216">
+<label>Total Bible Studies</label><input id="s30Studies" type="number" placeholder="e.g. 28">
+<label>Mid-Week Attendance</label><input id="s30Mid" type="number" placeholder="e.g. 68">
+<label>Week-End Attendance</label><input id="s30End" type="number" placeholder="e.g. 82">
+<label>Notes</label><input id="s30Notes" placeholder="e.g. ...">
+<button id="saveS30Btn" class="btn-green" onclick="saveS30()">💾 Save S-30</button>
+<div id="s30View"></div>
+<div class="card" style="background:#eff6ff"><b>📎 Upload S-30 PDF / Doc</b><br><label>Title</label><input id="s30FileTitle" placeholder="e.g. S-30 - November"><label>File</label><input type="file" id="s30File" accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx"><button class="btn-blue" onclick="uploadFileGeneric('s30Files','s30FileTitle','s30File','s30FilesList')">📤 Upload</button><div id="s30FilesList"></div></div>
+</div>
+<div id="dash-talks" class="hidden">
+<h4>🎤 Bible Talks Schedule</h4>
+<p class="small">Secretary + Appointed Brother can edit + upload. Everyone can view.</p>
+<p id="talksSaved" class="small" style="color:#16a34a;font-weight:700"></p>
+<label>Date</label><input id="talkDate" type="date">
+<label>Speaker</label><input id="talkSpeaker" placeholder="e.g. Brother John">
+<label>Talk Title / Theme</label><input id="talkTitle" placeholder="e.g. Keep Your Eyes on the Prize">
+<label>Meeting - Mid-Week / Week-End</label><select id="talkType"><option>Week-End Meeting</option><option>Mid-Week Meeting</option><option>Public Talk</option></select>
+<button id="addTalkBtn" class="btn-blue" onclick="addTalk()">➕ Add Talk</button>
+<div id="talksList"></div>
+<button id="saveTalksBtn" class="btn-green" onclick="saveTalks()">💾 Save Talks Schedule</button>
+<div class="card" style="background:#eff6ff"><b>📎 Upload Talks PDF / Doc</b><br><label>Title</label><input id="talkFileTitle" placeholder="e.g. Talks Schedule - November"><label>File</label><input type="file" id="talkFile" accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx"><button class="btn-blue" onclick="uploadFileGeneric('talkFiles','talkFileTitle','talkFile','talkFilesList')">📤 Upload</button><div id="talkFilesList"></div></div>
+</div>
+<div id="dash-av" class="hidden">
+<h4>🎬 AUDIO / VIDEO DEPARTMENT</h4>
+<p class="small">Secretary + Appointed Brother can upload PDF / Docs. <b>Everyone can view / download.</b></p>
+<p id="avSaved" class="small" style="color:#16a34a;font-weight:700"></p>
+<div id="avUploadBox">
+<label>Title</label><input id="avTitle" placeholder="e.g. Sound Schedule - November">
+<label>Upload PDF / Doc</label><input type="file" id="avFile" accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx">
+<button class="btn-blue" onclick="uploadAV()">📤 Upload File</button>
+</div>
+<div id="avList"></div>
+</div>
+</div>
+<div id="tab-s21" class="card hidden">
+<h3>📄 ALL S-21s - Stored Here</h3>
+<p class="small">All Publisher Records (S-21). Long-press a name for 4 seconds to show buttons.</p>
+<input id="s21Search" placeholder="🔍 Search S-21 by name..." oninput="renderS21()">
+<div id="s21List"></div>
+</div>
+<div id="tab-add" class="card hidden">
+<h3>CONGREGATION'S PUBLISHER RECORD</h3>
+<div style="text-align:center"><img id="picPreview" class="profilePic" src="" style="display:none"><br>
+<label>Profile Picture - Anyone can upload</label><input type="file" id="fPic" accept="image/*" onchange="handlePic(event)"></div>
+<input id="fName" placeholder="Name *">
+<input id="fId" placeholder="Publisher ID * e.g. PSAKALA01">
+<label>Date of Birth</label><input id="fDob" type="date">
+<label>Date of Baptism</label><input id="fBap" type="date">
+<label>Sex</label><select id="fSex"><option value="">Select</option><option>Male</option><option>Female</option></select>
+<label>Hope</label><select id="fHope"><option value="">Select</option><option>Other sheep</option><option>Anointed</option></select>
+<label>Appointment - Elder / Ministerial Servant</label><select id="fAppoint"><option value="">None</option><option>Elder</option><option>Ministerial servant</option></select>
+<label>Pioneer Status - Can be Pioneer + Elder at same time</label><select id="fPioneer"><option value="Publisher">Publisher</option><option value="Auxiliary Pioneer">Auxiliary Pioneer</option><option value="Regular Pioneer">Regular Pioneer</option><option value="Special Pioneer">Special Pioneer</option><option value="Field Missionary">Field Missionary</option></select>
+<label>Field Service Group</label><input id="fGroup" placeholder="e.g. Group 1">
+<label>Service Year</label><select id="fYear"><option>2025-2026</option><option>2026-2027</option><option>2024-2025</option></select>
+<p class="small"><b>Monthly Report - Sept to Aug:</b></p>
+<div style="overflow-x:auto"><table>
+<tr><th>Month</th><th>Shared</th><th>Studies</th><th>Aux Pio.</th><th>Hours</th><th>Remarks</th></tr>
+<tbody id="monthsBody"></tbody>
+<tr><td><b>Total</b></td><td id="totShared">-</td><td id="totStudies">0</td><td id="totAux">-</td><td id="totHours">0</td><td></td></tr>
+</table></div>
+<p id="lockMsg" class="small" style="color:#dc2626"></p>
+<button class="btn-green" onclick="saveRecord()">💾 Save (Syncs to all)</button>
+<button class="btn-blue" onclick="printOne(document.getElementById('fId').value)">🖨️ Print This S-21</button>
+<button class="btn-gray" onclick="clearForm()">Clear</button>
+</div>
+<div id="tab-meetings" class="card hidden">
+<h3>📅 Meetings - Chipunka Congregation</h3>
+<p id="meetingsLockMsg" class="small" style="color:#dc2626"></p>
+<p id="meetSavedMsg" class="small" style="color:#16a34a;font-weight:700"></p>
+<div style="background:#eff6ff;padding:12px;border-radius:12px">
+<h4>Mid-Week Meeting</h4>
+<label>Meeting Day</label><select id="midDay"><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option></select>
+<label>Meeting Time</label><input id="midTime" type="time" value="17:30">
+</div>
+<h4>📊 Mid-Week Meeting Attendance - 5 Weeks Per Month</h4>
+<div style="overflow-x:auto"><table>
+<tr><th>Month</th><th>Week 1</th><th>Week 2</th><th>Week 3</th><th>Week 4</th><th>Week 5</th><th>Average</th></tr>
+<tbody id="attMidBody"></tbody>
+</table></div>
+<div style="background:#f0fdf4;padding:12px;border-radius:12px;margin-top:14px">
+<h4>Week-End Meeting</h4>
+<label>Meeting Day</label><select id="endDay"><option>Sunday</option><option>Saturday</option></select>
+<label>Meeting Time</label><input id="endTime" type="time" value="09:00">
+</div>
+<h4>📊 Week-End Meeting Attendance - 5 Weeks Per Month</h4>
+<div style="overflow-x:auto"><table>
+<tr><th>Month</th><th>Week 1</th><th>Week 2</th><th>Week 3</th><th>Week 4</th><th>Week 5</th><th>Average</th></tr>
+<tbody id="attEndBody"></tbody>
+</table></div>
+<button id="saveMeetBtn" class="btn-green" onclick="saveMeetings()">💾 Save Meetings (Secretary + Appointed Brother Only)</button>
+<button class="btn-gray" onclick="refreshMeetings()">🔄 Refresh Meetings</button>
+</div>
+<div id="tab-territory" class="card hidden">
+<h3>TERRITORY ASSIGNMENT RECORD - S-13</h3>
+<p class="small">Chipunka Congregation - Like S-13 form</p>
+<p id="terrLockMsg" class="small" style="color:#dc2626"></p>
+<p id="terrSavedMsg" class="small" style="color:#16a34a;font-weight:700"></p>
+<label>Service Year</label><select id="terrYear"><option>2025-2026</option><option>2026-2027</option><option>2024-2025</option></select>
+<div id="myTerrBox"></div>
+<div id="terrFullView">
+<p class="small"><b>Scroll sideways to see all 4 Assignments - Same as paper S-13</b></p>
+<div style="overflow-x:auto"><table>
+<tr><th rowspan="2">Terr.<br>No.</th><th rowspan="2">Last date<br>completed*</th><th colspan="3">Assigned to 1</th><th colspan="3">Assigned to 2</th><th colspan="3">Assigned to 3</th><th colspan="3">Assigned to 4</th></tr>
+<tr><th>Name</th><th>Date<br>assigned</th><th>Date<br>completed</th><th>Name</th><th>Date<br>assigned</th><th>Date<br>completed</th><th>Name</th><th>Date<br>assigned</th><th>Date<br>completed</th><th>Name</th><th>Date<br>assigned</th><th>Date<br>completed</th></tr>
+<tbody id="terrBody"></tbody>
+</table></div>
+<p class="small">*When beginning a new sheet, use this column to record the date on which each territory was last completed. S-13-E 1/22</p>
+</div>
+<button id="saveTerrBtn" class="btn-green" onclick="saveTerritory()">💾 Save Territory (Secretary + Appointed Brother Only)</button>
+<button id="addTerrBtn" class="btn-blue" onclick="addTerrRow()">➕ Add Territory Row</button>
+<button class="btn-blue" onclick="printTerritory()">🖨️ Print S-13</button>
+<button class="btn-gray" onclick="refreshTerritory()">🔄 Refresh</button>
+</div>
+<div id="tab-events" class="card hidden">
+<h3>🎉 UPCOMING EVENTS - Chipunka Congregation</h3>
+<p id="eventsLockMsg" class="small" style="color:#dc2626"></p>
+<p id="eventsSavedMsg" class="small" style="color:#16a34a;font-weight:700"></p>
+<div class="card" style="background:#eff6ff">
+<h4>👔 Circuit Overseer Visit</h4>
+<label>Start Date</label><input id="evCOStart" type="date">
+<label>End Date</label><input id="evCOEnd" type="date">
+<label>Venue / Location</label><input id="evCOVenue" placeholder="e.g. Chipunka Kingdom Hall">
+<label>Notes / Details</label><input id="evCONotes" placeholder="e.g. Talk, meeting with elders...">
+</div>
+<div class="card" style="background:#fef9c3">
+<h4>🍞 Memorial</h4>
+<label>Date</label><input id="evMemDate" type="date">
+<label>Time</label><input id="evMemTime" type="time" value="18:00">
+<label>Venue / Location</label><input id="evMemVenue" placeholder="e.g. Chipunka Kingdom Hall">
+<label>Notes / Details</label><input id="evMemNotes" placeholder="e.g. Speaker, invite...">
+</div>
+<div class="card" style="background:#f0fdf4">
+<h4>🎪 Convention</h4>
+<label>Start Date</label><input id="evConvStart" type="date">
+<label>End Date</label><input id="evConvEnd" type="date">
+<label>Venue / Location</label><input id="evConvVenue" placeholder="e.g. Lusaka Convention Ground">
+<label>Notes / Details</label><input id="evConvNotes" placeholder="e.g. Theme, transport...">
+</div>
+<div class="card" style="background:#fdf2f8">
+<h4>🏛️ Circuit Assembly</h4>
+<label>Start Date</label><input id="evAsmStart" type="date">
+<label>End Date</label><input id="evAsmEnd" type="date">
+<label>Venue / Location</label><input id="evAsmVenue" placeholder="e.g. Assembly Hall">
+<label>Notes / Details</label><input id="evAsmNotes" placeholder="e.g. Theme, transport...">
+</div>
+<button id="saveEventsBtn" class="btn-green" onclick="saveEvents()">💾 Save Events (Secretary + Appointed Brother Only)</button>
+<button class="btn-gray" onclick="refreshEvents()">🔄 Refresh</button>
+</div>
+<div id="tab-reminders" class="card hidden">
+<h3>🔔 REPORT REMINDERS - Chipunka Congregation</h3>
+<p class="small">Reminds Publishers, Regular Pioneers & Auxiliary Pioneers to send their monthly report.</p>
+<div id="reminderBanner" style="background:#fee2e2;border:1px solid #dc2626;border-radius:12px;padding:12px;display:none"></div>
+<div class="card" style="background:#fef9c3">
+<b>📱 My Reminder - For Me</b><br>
+<span class="small">Tap Allow, then your phone will remind you even if app is closed.</span><br>
+<button class="btn-blue" onclick="requestNotif()">🔔 Allow Notifications On My Phone</button>
+<button class="btn-green" onclick="testNotif()">🧪 Test My Notification Now</button>
+<p id="notifStatus" class="small"></p>
+</div>
+<div class="card" style="background:#eff6ff">
+<b>⚙️ Reminder Settings - Secretary + Appointed Brother Only</b><br>
+<label>Remind On Day Of Month</label><input id="remDay" type="number" min="1" max="31" value="25">
+<label>Remind At Time</label><input id="remTime" type="time" value="18:00">
+<label>Message To Send</label><input id="remMsg" placeholder="e.g. Brother/Sister, please send your report for this month. Thank you!">
+<label>Remind Who?</label><select id="remWho"><option value="all">All - Publishers + Regular + Auxiliary</option><option value="publishers">Publishers Only</option><option value="pioneers">Regular + Auxiliary Only</option></select>
+<label><input type="checkbox" id="remOn" checked style="width:auto"> Reminders ON</label><br>
+<button class="btn-green" onclick="saveReminders()">💾 Save Reminder Settings</button>
+<p id="remSavedMsg" class="small" style="color:#16a34a;font-weight:700"></p>
+</div>
+<div class="card">
+<b>📋 Who Has NOT Reported This Month?</b><br>
+<span class="small">Secretary can see who still needs to report.</span><br>
+<div id="notReportedList"></div>
+</div>
+</div><div id="tab-users" class="card hidden">
+<h3>Create Login</h3>
+<p class="small">Secretary + Appointed Brother can create accounts.</p>
+<input id="uId" placeholder="New ID e.g. JOHN01">
+<input id="uName" placeholder="Full Name">
+<input id="uPass" placeholder="Password e.g. 1234">
+<label>Role</label><select id="uRole"><option value="publisher">Publisher</option><option value="appointed">Appointed Brother</option><option value="secretary">Secretary</option></select>
+<button class="btn-blue" onclick="createUser()">Create Account</button>
+<div id="usersList"></div>
+</div>
+<div id="tab-settings" class="card hidden">
+<h3>Settings</h3>
+<label>Change Secretary Password</label><input id="newSecPass" type="password" placeholder="New Secretary Password">
+<button class="btn-blue" onclick="changeSecPass()">Change Password</button>
+<p class="small">Cloud: Firebase Firestore - publisherapp-f38af. All devices sync. - Chipunka Congregation</p>
+</div>
+<button class="btn-green" onclick="openWhatsApp()" style="width:100%;font-size:16px;padding:14px">🟢 WhatsApp Secretary - 0977399807</button>
+<div class="footerHelp">📞 For assistance call your secretary - 0977399807</div>
+</div>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
+import {getFirestore, doc, getDoc, setDoc, onSnapshot} from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
+const firebaseConfig={apiKey:"AIzaSyBobbLJmK7HbdPlN7bNhFP9flkhafvkapA",authDomain:"publisherapp-f38af.firebaseapp.com",projectId:"publisherapp-f38af",storageBucket:"publisherapp-f38af.firebasestorage.app",messagingSenderId:"8811787300",appId:"1:8811787300:web:b3604bc37bc1fa809f54b1"};
+const app=initializeApp(firebaseConfig); const db=getFirestore(app);
+let publishers=[], users=[], currentUser=null, currentRole='', currentPic='';
+let meetings={midDay:"Thursday",midTime:"17:30",endDay:"Sunday",endTime:"09:00",attMidFlat:[],attEndFlat:[]};
+let territory={year:"2025-2026",rows:[]};
+let events={coStart:"",coEnd:"",coVenue:"",coNotes:"",memDate:"",memTime:"18:00",memVenue:"",memNotes:"",convStart:"",convEnd:"",convVenue:"",convNotes:"",asmStart:"",asmEnd:"",asmVenue:"",asmNotes:""};
+let reminders={day:25,time:"18:00",msg:"Brother/Sister, please send your report for this month. Thank you! - Chipunka Congregation",who:"all",on:true};
+let cleaning=[]; let s30={month:"September",year:"2025-2026",pub:"",reg:"",aux:"",hours:"",studies:"",mid:"",end:"",notes:""}; let talks=[]; let avFiles=[]; let cleanFiles=[]; let s30Files=[]; let talkFiles=[];
+let listenerStarted=false, meetingsDirty=false, terrDirty=false, eventsDirty=false, currentTab='home', pressTimer=null, currentDash='cleaning';
+const mainDoc=doc(db,"app","main");
+const MONTHS=["September","October","November","December","January","February","March","April","May","June","July","August"];
+window.openWhatsApp=function(){window.open("https://wa.me/260977399807?text="+encodeURIComponent("Hello Secretary, I need assistance with PublisherAPP - Chipunka Congregation."),"_blank");};
+window.toggleDotMenu=function(){document.getElementById('dotMenu').classList.toggle('hidden');};
+window.startPress=function(id){clearTimeout(pressTimer); pressTimer=setTimeout(()=>{let el=document.getElementById('act-'+id); if(el) el.classList.add('show'); if(navigator.vibrate) navigator.vibrate(100);},4000);};
+window.endPress=function(){clearTimeout(pressTimer);};
+window.showDash=function(which){currentDash=which; ['cleaning','s30','talks','av'].forEach(x=>{document.getElementById('dash-'+x).classList.toggle('hidden',x!==which); document.getElementById('dashBtn-'+x).classList.toggle('active',x===which);}); renderDashboard();};
+window.showReport=function(which){if(!isLeader()){alert('🔒 Only Secretary + Appointed Brother can see Reports'); return;} showTab('report'); let title={group:'📊 TOTALS BY GROUP',counts:'👥 CONGREGATION COUNTS',month:'📖 TOTALS PER MONTH',pioneers:'🟢🟡 REGULAR + AUXILIARY PIONEERS'}[which]; document.getElementById('reportTitle').innerText=title; buildReport(which);};
+function buildReport(which){let box=document.getElementById('reportBox'); let list=publishers; let aux=list.filter(p=>p.pioneer==='Auxiliary Pioneer'); let reg=list.filter(p=>p.pioneer==='Regular Pioneer'); let pub=list.filter(p=>!p.pioneer||p.pioneer==='Publisher'); let g=(arr)=>arr.length+' persons • '+arr.reduce((a,p)=>a+(+p.totalHours||0),0)+' Hours • '+arr.reduce((a,p)=>a+(+p.totalStudies||0),0)+' Studies'; if(which==='group'){box.innerHTML=`<div class="card" style="background:#f0fdf4"><b>📊 TOTALS BY GROUP</b><br>🔹 Auxiliary Pioneers: ${g(aux)}<br>🔹 Regular Pioneers: ${g(reg)}<br>🔹 Publishers: ${g(pub)}<br><b>Total All: ${list.length} persons • ${list.reduce((a,p)=>a+(+p.totalHours||0),0)} Hours</b></div>`;} if(which==='counts'){let cEld=publishers.filter(p=>p.appoint==='Elder').length; let cMS=publishers.filter(p=>p.appoint==='Ministerial servant').length; let cAux=publishers.filter(p=>p.pioneer==='Auxiliary Pioneer').length; let cReg=publishers.filter(p=>p.pioneer==='Regular Pioneer').length; box.innerHTML=`<div class="card" style="background:#eff6ff"><b>👥 CONGREGATION COUNTS</b><br>👴 Elders: <b>${cEld}</b> | 🤝 Ministerial Servants: <b>${cMS}</b><br>🟡 Auxiliary Pioneers: <b>${cAux}</b> | 🟢 Regular Pioneers: <b>${cReg}</b></div>`;} if(which==='month'){let getStud=(arr,i)=>arr.reduce((a,p)=>a+((p.months&&p.months[i])?+p.months[i].studies||0:0),0); let getHours=(arr,i)=>arr.reduce((a,p)=>a+((p.months&&p.months[i])?+p.months[i].hours||0:0),0); let pubAll=publishers.filter(p=>!p.pioneer||p.pioneer==='Publisher'); let regAll=publishers.filter(p=>p.pioneer==='Regular Pioneer'); let auxAll=publishers.filter(p=>p.pioneer==='Auxiliary Pioneer'); let getActive=(arr,i)=>arr.filter(p=>{let m=p.months&&p.months[i]; return m&&(m.shared||(+m.hours||0)>0||(+m.studies||0)>0);}).length; let getYearActive=(arr)=>arr.filter(p=>(p.months||[]).some(m=>m&&(m.shared||(+m.hours||0)>0||(+m.studies||0)>0))).length; let rows=MONTHS.map((m,i)=>{let ps=getStud(pubAll,i), ph=getHours(pubAll,i), rs=getStud(regAll,i), rh=getHours(regAll,i), as=getStud(auxAll,i), ah=getHours(auxAll,i); return `<tr><td><b>${m}</b></td><td>${getActive(pubAll,i)}</td><td>${ps}</td><td>${ph}</td><td>${getActive(regAll,i)}</td><td>${rs}</td><td>${rh}</td><td>${getActive(auxAll,i)}</td><td>${as}</td><td>${ah}</td><td><b>${ps+rs+as}</b></td><td><b>${ph+rh+ah}</b></td></tr>`;}).join(''); let totP_S=MONTHS.reduce((a,m,i)=>a+getStud(pubAll,i),0), totP_H=MONTHS.reduce((a,m,i)=>a+getHours(pubAll,i),0), totR_S=MONTHS.reduce((a,m,i)=>a+getStud(regAll,i),0), totR_H=MONTHS.reduce((a,m,i)=>a+getHours(regAll,i),0), totA_S=MONTHS.reduce((a,m,i)=>a+getStud(auxAll,i),0), totA_H=MONTHS.reduce((a,m,i)=>a+getHours(auxAll,i),0); box.innerHTML=`<div class="card" style="background:#fefce8"><b>📖 TOTALS PER MONTH</b><div style="overflow-x:auto"><table><tr><th rowspan=2>Month</th><th colspan=3>Publishers</th><th colspan=3>Regular Pioneers</th><th colspan=3>Auxiliary Pioneers</th><th colspan=2>TOTAL</th></tr><tr><th>No.</th><th>Studies</th><th>Hours</th><th>No.</th><th>Studies</th><th>Hours</th><th>No.</th><th>Studies</th><th>Hours</th><th>Studies</th><th>Hours</th></tr>${rows}<tr><td><b>TOTAL YEAR</b></td><td><b>${getYearActive(pubAll)}</b></td><td><b>${totP_S}</b></td><td><b>${totP_H}</b></td><td><b>${getYearActive(regAll)}</b></td><td><b>${totR_S}</b></td><td><b>${totR_H}</b></td><td><b>${getYearActive(auxAll)}</b></td><td><b>${totA_S}</b></td><td><b>${totA_H}</b></td><td><b>${totP_S+totR_S+totA_S}</b></td><td><b>${totP_H+totR_H+totA_H}</b></td></tr></table></div></div>`;} if(which==='pioneers'){let nameList=(arr)=>arr.length?arr.map(p=>`• ${p.name} ${p.group? '('+p.group+')':''}`).join('<br>'):'<span class="small">None yet</span>'; let regAll=publishers.filter(p=>p.pioneer==='Regular Pioneer'); let auxAll=publishers.filter(p=>p.pioneer==='Auxiliary Pioneer'); box.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap"><div class="card" style="flex:1;min-width:140px;background:#f0fdf4"><b>🟢 REGULAR PIONEERS (${regAll.length})</b><br>${nameList(regAll)}</div><div class="card" style="flex:1;min-width:140px;background:#fefce8"><b>🟡 AUXILIARY PIONEERS (${auxAll.length})</b><br>${nameList(auxAll)}</div></div>`;}}
+function flattenAtt(arr){if(!arr) return []; if(arr.length && Array.isArray(arr[0])) return arr.flat(); return arr;}
+function normalizeMeetings(m){if(!m) return; let n={midDay:m.midDay||"Thursday",midTime:m.midTime||"17:30",endDay:m.endDay||"Sunday",endTime:m.endTime||"09:00",attMidFlat:[],attEndFlat:[]}; if(m.attMidFlat) n.attMidFlat=flattenAtt(m.attMidFlat); else if(m.attMid) n.attMidFlat=flattenAtt(m.attMid); else if(m.att) n.attMidFlat=flattenAtt(m.att); if(m.attEndFlat) n.attEndFlat=flattenAtt(m.attEndFlat); else if(m.attEnd) n.attEndFlat=flattenAtt(m.attEnd); return n;}
+function emptyTerrRow(){return {terrNo:"",lastComp:"",n1:"",d1a:"",d1c:"",n2:"",d2a:"",d2c:"",n3:"",d3a:"",d3c:"",n4:"",d4a:"",d4c:""};}
+function normalizeTerritory(t){if(!t||!t.rows) return {year:"2025-2026",rows:Array.from({length:20},()=>emptyTerrRow())}; return {year:t.year||"2025-2026",rows:t.rows.map(r=>({...emptyTerrRow(),...r}))};}
+function normalizeEvents(e){let d={coStart:"",coEnd:"",coVenue:"",coNotes:"",memDate:"",memTime:"18:00",memVenue:"",memNotes:"",convStart:"",convEnd:"",convVenue:"",convNotes:"",asmStart:"",asmEnd:"",asmVenue:"",asmNotes:""}; if(!e) return d; return {...d,...e};}
+territory=normalizeTerritory(null);
+async function ensureData(){let s=await getDoc(mainDoc); if(!s.exists()){await setDoc(mainDoc,{publishers:[],users:[{id:"SECRETARY",name:"Secretary",pass:"admin123",role:"secretary"}],meetings,territory,events,reminders,cleaning:[],s30,talks:[],avFiles:[],cleanFiles:[],s30Files:[],talkFiles:[]});}}
+async function loadData(){await ensureData(); if(listenerStarted) return; listenerStarted=true; onSnapshot(mainDoc,(s)=>{if(s.exists()){let d=s.data(); publishers=d.publishers||[]; users=d.users||[]; cleaning=d.cleaning||[]; s30={...s30,...(d.s30||{})}; talks=d.talks||[]; avFiles=d.avFiles||[]; cleanFiles=d.cleanFiles||[]; s30Files=d.s30Files||[]; talkFiles=d.talkFiles||[]; if(d.meetings && !meetingsDirty){meetings=normalizeMeetings(d.meetings);} if(d.territory && !terrDirty){territory=normalizeTerritory(d.territory);} if(d.events && !eventsDirty){events=normalizeEvents(d.events);} if(d.reminders){reminders={...reminders,...d.reminders};} renderList(); renderUsers(); renderS21(); renderDashboard(); if(currentTab!=='meetings' || !meetingsDirty) renderMeetings(); if(currentTab!=='territory' || !terrDirty) renderTerritory(); if(currentTab!=='events' || !eventsDirty) renderEvents();}});}
+async function saveCloud(){await setDoc(mainDoc,{publishers,users,meetings,territory,events,reminders,cleaning,s30,talks,avFiles,cleanFiles,s30Files,talkFiles});}
+function isLeader(){return currentRole==='secretary'||currentRole==='appointed';}
+function getGreeting(){let h=new Date().getHours(); if(h>=5 && h<12) return "Good Morning"; if(h>=12 && h<17) return "Good Afternoon"; return "Good Evening";}
+function buildMonths(data){let h=''; MONTHS.forEach((m,i)=>{let d=(data&&data[i])||{}; h+=`<tr><td>${m}</td><td><input type="checkbox" id="mShared${i}" ${d.shared?'checked':''}></td><td><input type="number" id="mStud${i}" value="${d.studies||''}"></td><td><input type="checkbox" id="mAux${i}" ${d.aux?'checked':''}></td><td><input type="number" id="mHours${i}" value="${d.hours||''}"></td><td><input id="mRem${i}" value="${d.remarks||''}"></td></tr>`;}); document.getElementById('monthsBody').innerHTML=h; updateTotals();}
+function updateTotals(){let th=0,ts=0,sh=0,ax=0; MONTHS.forEach((m,i)=>{th+=+document.getElementById('mHours'+i).value||0; ts+=+document.getElementById('mStud'+i).value||0; if(document.getElementById('mShared'+i).checked) sh++; if(document.getElementById('mAux'+i).checked) ax++;}); document.getElementById('totHours').innerText=th; document.getElementById('totStudies').innerText=ts; document.getElementById('totShared').innerText=sh; document.getElementById('totAux').innerText=ax;}
+document.addEventListener('input',e=>{if(e.target.id.startsWith('m')) updateTotals(); if(e.target.id.startsWith('attMid')||e.target.id.startsWith('attEnd')||e.target.id==='midDay'||e.target.id==='midTime'||e.target.id==='endDay'||e.target.id==='endTime'){meetingsDirty=true; updateAttAvg();} if(e.target.id.startsWith('terr')||e.target.id==='terrYear'){terrDirty=true;} if(e.target.id.startsWith('ev')){eventsDirty=true;}});
+document.addEventListener('click',e=>{let dm=document.getElementById('dotMenu'); if(dm && !dm.classList.contains('hidden') && !e.target.closest('.dots') && !e.target.closest('.dotMenu')) dm.classList.add('hidden');});
+buildMonths(null);
+function getAttVal(flat,i,w){return (flat && flat[i*5+w])||'';}
+function buildAttTable(){let dis=isLeader()?'':'disabled'; let hMid=''; MONTHS.forEach((m,i)=>{hMid+=`<tr><td><b>${m}</b></td>${[0,1,2,3,4].map(w=>`<td><input type="number" id="attMid${i}_${w}" value="${getAttVal(meetings.attMidFlat,i,w)}" ${dis} min="0"></td>`).join('')}<td id="attMidAvg${i}"><b>-</b></td></tr>`;}); document.getElementById('attMidBody').innerHTML=hMid; let hEnd=''; MONTHS.forEach((m,i)=>{hEnd+=`<tr><td><b>${m}</b></td>${[0,1,2,3,4].map(w=>`<td><input type="number" id="attEnd${i}_${w}" value="${getAttVal(meetings.attEndFlat,i,w)}" ${dis} min="0"></td>`).join('')}<td id="attEndAvg${i}"><b>-</b></td></tr>`;}); document.getElementById('attEndBody').innerHTML=hEnd; updateAttAvg();}
+function updateAttAvg(){MONTHS.forEach((m,i)=>{['Mid','End'].forEach(t=>{let el=document.getElementById('att'+t+i+'_0'); if(!el) return; let vals=[0,1,2,3,4].map(w=>{let inp=document.getElementById('att'+t+i+'_'+w); return inp?+inp.value||0:0;}).filter(v=>v>0); let avg=vals.length? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):'-'; let avgEl=document.getElementById('att'+t+'Avg'+i); if(avgEl) avgEl.innerHTML='<b>'+avg+'</b>';});});}
+window.handlePic=function(e){let f=e.target.files[0]; if(!f) return; let r=new FileReader(); r.onload=function(ev){currentPic=ev.target.result; let img=document.getElementById('picPreview'); img.src=currentPic; img.style.display='block';}; r.readAsDataURL(f);};function fileListHTML(arr,key){if(!arr.length) return '<p class="small">No files yet</p>'; return arr.map((f,i)=>`<div class="card">📄 <b>${f.title||f.name}</b><br><span class="small">${f.name} • ${new Date(f.at).toLocaleDateString()}</span><br><a href="${f.data}" download="${f.name}" target="_blank"><button class="btn-blue">👁️ View / Download</button></a> ${isLeader()?`<button class="btn-red" onclick="delGenericFile('${key}',${i})">Delete</button>`:''}</div>`).join('');}
+window.uploadFileGeneric=function(arrKey,titleId,fileId,listId){if(!isLeader()){alert('Only Secretary + Appointed can upload'); return;} let title=document.getElementById(titleId).value.trim(); let f=document.getElementById(fileId).files[0]; if(!f){alert('Choose a PDF / Doc first'); return;} if(f.size>900000){alert('File too big - keep under 900KB. Use small PDF.'); return;} let r=new FileReader(); r.onload=async function(ev){let arr={cleanFiles,s30Files,talkFiles,avFiles}[arrKey]; arr.push({title:title||f.name,name:f.name,data:ev.target.result,[STRIPPED] await saveCloud(); document.getElementById(titleId).value=''; document.getElementById(fileId).value=''; alert('✅ Uploaded! Everyone can view it.');}; r.readAsDataURL(f);};
+window.delGenericFile=async function(key,i){if(key==='cleanFiles') cleanFiles.splice(i,1); if(key==='s30Files') s30Files.splice(i,1); if(key==='talkFiles') talkFiles.splice(i,1); if(key==='avFiles') avFiles.splice(i,1); await saveCloud();};
+window.renderDashboard=function(){let lead=isLeader(); ['addCleanBtn','saveCleanBtn','addTalkBtn','saveTalksBtn','saveS30Btn'].forEach(id=>{let e=document.getElementById(id); if(e) e.style.display=lead?'inline-block':'none';}); let avBox=document.getElementById('avUploadBox'); if(avBox) avBox.style.display=lead?'block':'none'; document.getElementById('cleanList').innerHTML=cleaning.length?cleaning.map((c,i)=>`<div class="card">🧹 <b>${c.week||''}</b><br>${c.group||''}<br><span class="small">Area: ${c.area||''}</span> ${lead?`<br><button class="btn-red" onclick="delCleaning(${i})">Delete</button>`:''}</div>`).join(''):'<p class="small">No cleaning schedule yet</p>'; document.getElementById('s30Month').value=s30.month||"September"; document.getElementById('s30Year').value=s30.year||"2025-2026"; ['s30Pub','s30Reg','s30Aux','s30Hours','s30Studies','s30Mid','s30End','s30Notes'].forEach(id=>{let e=document.getElementById(id); if(e){let k={s30Pub:'pub',s30Reg:'reg',s30Aux:'aux',s30Hours:'hours',s30Studies:'studies',s30Mid:'mid',s30End:'end',s30Notes:'notes'}[id]; e.value=s30[k]||''; e.disabled=!lead;}}); document.getElementById('s30Month').disabled=!lead; document.getElementById('s30Year').disabled=!lead; document.getElementById('s30View').innerHTML=`<div class="card" style="background:#eff6ff"><b>S-30 - ${s30.month||''} ${s30.year||''}</b><br>Publishers: ${s30.pub||'-'} | Regular: ${s30.reg||'-'} | Auxiliary: ${s30.aux||'-'}<br>Hours: ${s30.hours||'-'} | Studies: ${s30.studies||'-'}<br>Mid-Week: ${s30.mid||'-'} | Week-End: ${s30.end||'-'}<br>${s30.notes||''}</div>`; document.getElementById('talksList').innerHTML=talks.length?talks.map((t,i)=>`<div class="card">🎤 <b>${t.date||''}</b> - ${t.speaker||''}<br>${t.title||''}<br><span class="small">${t.type||''}</span> ${lead?`<br><button class="btn-red" onclick="delTalk(${i})">Delete</button>`:''}</div>`).join(''):'<p class="small">No talks yet</p>'; document.getElementById('avList').innerHTML=fileListHTML(avFiles,'avFiles'); document.getElementById('cleanFilesList').innerHTML=fileListHTML(cleanFiles,'cleanFiles'); document.getElementById('s30FilesList').innerHTML=fileListHTML(s30Files,'s30Files'); document.getElementById('talkFilesList').innerHTML=fileListHTML(talkFiles,'talkFiles'); let hc=document.getElementById('homeCounts'); if(hc) hc.innerHTML=`Total S-21s: <b>${publishers.length}</b> • Cleaning items: <b>${cleaning.length}</b> • Talks: <b>${talks.length}</b> • Files: <b>${avFiles.length+cleanFiles.length+s30Files.length+talkFiles.length}</b>`;};
+window.addCleaning=function(){if(!isLeader()) return; let w=document.getElementById('cleanWeek').value.trim(); let g=document.getElementById('cleanGroup').value.trim(); let a=document.getElementById('cleanArea').value.trim(); if(!w||!g){alert('Week + Group required'); return;} cleaning.push({week:w,group:g,area:a}); document.getElementById('cleanWeek').value=''; document.getElementById('cleanGroup').value=''; document.getElementById('cleanArea').value=''; renderDashboard();};
+window.delCleaning=async function(i){cleaning.splice(i,1); await saveCloud();};
+window.saveCleaning=async function(){if(!isLeader()) return; await saveCloud(); document.getElementById('cleanSaved').innerText='✅ Cleaning Saved ✓'; alert('✅ Cleaning Saved!');};
+window.saveS30=async function(){if(!isLeader()) return; s30={month:document.getElementById('s30Month').value,year:document.getElementById('s30Year').value,pub:document.getElementById('s30Pub').value,reg:document.getElementById('s30Reg').value,aux:document.getElementById('s30Aux').value,hours:document.getElementById('s30Hours').value,studies:document.getElementById('s30Studies').value,mid:document.getElementById('s30Mid').value,end:document.getElementById('s30End').value,notes:document.getElementById('s30Notes').value}; await saveCloud(); document.getElementById('s30Saved').innerText='✅ S-30 Saved ✓'; alert('✅ S-30 Saved!');};
+window.addTalk=function(){if(!isLeader()) return; let d=document.getElementById('talkDate').value; let s=document.getElementById('talkSpeaker').value.trim(); let t=document.getElementById('talkTitle').value.trim(); if(!d||!s){alert('Date + Speaker required'); return;} talks.push({date:d,speaker:s,title:t,type:document.getElementById('talkType').value}); document.getElementById('talkSpeaker').value=''; document.getElementById('talkTitle').value=''; renderDashboard();};
+window.delTalk=async function(i){talks.splice(i,1); await saveCloud();};
+window.saveTalks=async function(){if(!isLeader()) return; await saveCloud(); document.getElementById('talksSaved').innerText='✅ Talks Saved ✓'; alert('✅ Talks Saved!');};
+window.uploadAV=function(){uploadFileGeneric('avFiles','avTitle','avFile','avList');};
+window.refreshMeetings=function(){meetingsDirty=false; renderMeetings(); document.getElementById('meetSavedMsg').innerText='Refreshed from cloud ✓';};
+window.renderMeetings=function(){let mid=document.getElementById('midDay'); if(mid) mid.value=meetings.midDay||"Thursday"; let mt=document.getElementById('midTime'); if(mt) mt.value=meetings.midTime||"17:30"; let ed=document.getElementById('endDay'); if(ed) ed.value=meetings.endDay||"Sunday"; let et=document.getElementById('endTime'); if(et) et.value=meetings.endTime||"09:00"; ['midDay','midTime','endDay','endTime'].forEach(id=>{let e=document.getElementById(id); if(e) e.disabled=!isLeader();}); let btn=document.getElementById('saveMeetBtn'); if(btn) btn.style.display=isLeader()?'inline-block':'none'; let lm=document.getElementById('meetingsLockMsg'); if(lm) lm.innerText=isLeader()?'You are Secretary / Appointed Brother - you can edit.':'🔒 View only - Only Secretary + Appointed Brother can edit Meetings.'; buildAttTable();};
+window.saveMeetings=async function(){if(!isLeader()){alert('Only Secretary + Appointed Brother can edit Meetings'); return;} try{let midDay=document.getElementById('midDay').value; let midTime=document.getElementById('midTime').value; let endDay=document.getElementById('endDay').value; let endTime=document.getElementById('endTime').value; let attMidFlat=[]; let attEndFlat=[]; MONTHS.forEach((m,i)=>{for(let w=0;w<5;w++){let e1=document.getElementById('attMid'+i+'_'+w); attMidFlat.push(e1?+e1.value||0:0); let e2=document.getElementById('attEnd'+i+'_'+w); attEndFlat.push(e2?+e2.value||0:0);}}); meetings={midDay,midTime,endDay,endTime,attMidFlat,attEndFlat}; meetingsDirty=false; await saveCloud(); document.getElementById('meetSavedMsg').innerText='✅ SAVED Meetings ✓'; alert('✅ Meetings Saved!'); }catch(err){alert('Save failed: '+err.message);}};
+window.refreshTerritory=function(){terrDirty=false; renderTerritory(); document.getElementById('terrSavedMsg').innerText='Refreshed from cloud ✓';};
+window.addTerrRow=function(){if(!isLeader()){alert('Only Secretary + Appointed Brother'); return;} territory.rows.push(emptyTerrRow()); terrDirty=true; renderTerritory();};
+window.renderTerritory=function(){document.getElementById('terrYear').value=territory.year||"2025-2026"; document.getElementById('terrYear').disabled=!isLeader(); document.getElementById('saveTerrBtn').style.display=isLeader()?'inline-block':'none'; document.getElementById('addTerrBtn').style.display=isLeader()?'inline-block':'none'; document.getElementById('terrLockMsg').innerText=isLeader()?'You are Secretary / Appointed Brother - you can enter / edit Territory.':'🔒 View only - You can only see YOUR territory number.'; let dis=isLeader()?'':'disabled'; let h=''; territory.rows.forEach((r,i)=>{h+=`<tr><td><input id="terrNo${i}" value="${r.terrNo||''}" ${dis} placeholder="No."></td><td><input id="terrLast${i}" type="date" value="${r.lastComp||''}" ${dis}></td>${[1,2,3,4].map(n=>`<td><input id="terrN${n}_${i}" value="${r['n'+n]||''}" ${dis} placeholder="Name"></td><td><input id="terrD${n}a_${i}" type="date" value="${r['d'+n+'a']||''}" ${dis}></td><td><input id="terrD${n}c_${i}" type="date" value="${r['d'+n+'c']||''}" ${dis}></td>`).join('')}</tr>`;}); document.getElementById('terrBody').innerHTML=h; if(isLeader()){document.getElementById('terrFullView').style.display='block'; document.getElementById('myTerrBox').innerHTML='';} else {document.getElementById('terrFullView').style.display='none'; let myName=(currentUser?currentUser.name||'':'').toLowerCase(); let mine=territory.rows.filter(r=>{return [r.n1,r.n2,r.n3,r.n4].some(n=>n && (n.toLowerCase().includes(myName) || myName.includes(n.toLowerCase())));}); if(!mine.length){document.getElementById('myTerrBox').innerHTML=`<div class="card" style="background:#fef9c3"><b>🗺️ MY TERRITORY</b><br>No territory assigned to you yet.<br><span class="small">Service Year: ${territory.year}</span></div>`;} else {document.getElementById('myTerrBox').innerHTML=`<div class="card" style="background:#f0fdf4"><b>🗺️ MY TERRITORY - Service Year: ${territory.year}</b><br>`+mine.map(r=>`Territory No: <b style="font-size:22px">${r.terrNo||'-'}</b> &nbsp; Last Completed: ${r.lastComp||'-'}`).join('<br>')+`<br><span class="small">You can only see your own territory number.</span></div>`;}}};
+window.saveTerritory=async function(){if(!isLeader()){alert('Only Secretary + Appointed Brother can edit Territory'); return;} try{let year=document.getElementById('terrYear').value; let rows=territory.rows.map((r,i)=>{let o={terrNo:document.getElementById('terrNo'+i).value,lastComp:document.getElementById('terrLast'+i).value}; [1,2,3,4].forEach(n=>{o['n'+n]=document.getElementById('terrN'+n+'_'+i).value; o['d'+n+'a']=document.getElementById('terrD'+n+'a_'+i).value; o['d'+n+'c']=document.getElementById('terrD'+n+'c_'+i).value;}); return o;}); territory={year,rows}; terrDirty=false; await saveCloud(); document.getElementById('terrSavedMsg').innerText='✅ SAVED: Territory S-13 ✓'; alert('✅ Territory Saved!'); }catch(err){alert('Save failed: '+err.message);}};
+window.printTerritory=function(){let rows=territory.rows; if(!isLeader()){let myName=(currentUser?currentUser.name||'':'').toLowerCase(); rows=rows.filter(r=>[r.n1,r.n2,r.n3,r.n4].some(n=>n && (n.toLowerCase().includes(myName) || myName.includes(n.toLowerCase()))));} let trs=rows.filter(r=>r.terrNo||r.n1||r.n2).map(r=>`<tr><td>${r.terrNo||''}</td><td>${r.lastComp||''}</td>${[1,2,3,4].map(n=>`<td>${r['n'+n]||''}</td><td>${r['d'+n+'a']||''}</td><td>${r['d'+n+'c']||''}</td>`).join('')}</tr>`).join('')||'<tr><td colspan=14>No territory yet</td></tr>'; let el=document.getElementById('printArea'); el.style.display='block'; el.innerHTML=`<div style="font-family:Arial;padding:10px"><div style="text-align:center"><h2>TERRITORY ASSIGNMENT RECORD - S-13</h2><p>CHIPUNKA CONGREGATION - Service Year: ${territory.year||''}</p></div><table border=1 cellspacing=0 cellpadding=5 style="width:100%;border-collapse:collapse;font-size:11px"><tr><th rowspan=2>Terr. No.</th><th rowspan=2>Last date completed</th><th colspan=3>Assigned to 1</th><th colspan=3>Assigned to 2</th><th colspan=3>Assigned to 3</th><th colspan=3>Assigned to 4</th></tr><tr><th>Name</th><th>Date assigned</th><th>Date completed</th><th>Name</th><th>Date assigned</th><th>Date completed</th><th>Name</th><th>Date assigned</th><th>Date completed</th><th>Name</th><th>Date assigned</th><th>Date completed</th></tr>${trs}</table><p style="font-size:12px">Printed from PublisherAPP - ${new Date().toLocaleDateString()}</p></div>`; setTimeout(()=>{window.print(); el.style.display='none';},200);};
+window.refreshEvents=function(){eventsDirty=false; renderEvents(); document.getElementById('eventsSavedMsg').innerText='Refreshed from cloud ✓';};
+window.renderEvents=function(){let map={evCOStart:'coStart',evCOEnd:'coEnd',evCOVenue:'coVenue',evCONotes:'coNotes',evMemDate:'memDate',evMemTime:'memTime',evMemVenue:'memVenue',evMemNotes:'memNotes',evConvStart:'convStart',evConvEnd:'convEnd',evConvVenue:'convVenue',evConvNotes:'convNotes',evAsmStart:'asmStart',evAsmEnd:'asmEnd',evAsmVenue:'asmVenue',evAsmNotes:'asmNotes'}; Object.keys(map).forEach(id=>{let e=document.getElementById(id); if(e){e.value=events[map[id]]||''; e.disabled=!isLeader();}}); document.getElementById('saveEventsBtn').style.display=isLeader()?'inline-block':'none'; document.getElementById('eventsLockMsg').innerText=isLeader()?'You are Secretary / Appointed Brother - you can enter / edit Events.':'🔒 View only - Only Secretary + Appointed Brother can enter / edit. You can see all events.';};
+window.saveEvents=async function(){if(!isLeader()){alert('Only Secretary + Appointed Brother can edit Events'); return;} try{events={coStart:document.getElementById('evCOStart').value,coEnd:document.getElementById('evCOEnd').value,coVenue:document.getElementById('evCOVenue').value,coNotes:document.getElementById('evCONotes').value,memDate:document.getElementById('evMemDate').value,memTime:document.getElementById('evMemTime').value,memVenue:document.getElementById('evMemVenue').value,memNotes:document.getElementById('evMemNotes').value,convStart:document.getElementById('evConvStart').value,convEnd:document.getElementById('evConvEnd').value,convVenue:document.getElementById('evConvVenue').value,convNotes:document.getElementById('evConvNotes').value,asmStart:document.getElementById('evAsmStart').value,asmEnd:document.getElementById('evAsmEnd').value,asmVenue:document.getElementById('evAsmVenue').value,asmNotes:document.getElementById('evAsmNotes').value}; eventsDirty=false; await saveCloud(); document.getElementById('eventsSavedMsg').innerText='✅ SAVED: Upcoming Events ✓'; alert('✅ Upcoming Events Saved!'); }catch(err){alert('Save failed: '+err.message);}};window.toggleMenu=function(){document.getElementById('sideMenu').classList.toggle('hidden');};
+window.doLogin=async function(){let id=document.getElementById('loginId').value.trim().toUpperCase(); let pass=document.getElementById('loginPass').value.trim(); await ensureData(); let s=await getDoc(mainDoc); let d=s.data(); users=d.users||[]; publishers=d.publishers||[]; cleaning=d.cleaning||[]; s30={...s30,...(d.s30||{})}; talks=d.talks||[]; avFiles=d.avFiles||[]; cleanFiles=d.cleanFiles||[]; s30Files=d.s30Files||[]; talkFiles=d.talkFiles||[]; if(d.meetings){meetings=normalizeMeetings(d.meetings);} if(d.territory){territory=normalizeTerritory(d.territory);} if(d.events){events=normalizeEvents(d.events);} if(d.reminders){reminders={...reminders,...d.reminders};} let u=users.find(x=>x.id===id && x.pass===pass); if(!u){document.getElementById('loginMsg').innerText="❌ Wrong ID or Password."; return;} currentUser=u; currentRole=u.role; document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('appScreen').classList.remove('hidden'); document.getElementById('greetingBox').innerText=getGreeting()+", "+u.name+"! 👋 Welcome to Chipunka Congregation."; document.getElementById('whoLine').innerText="Logged in as: "+u.name+" ("+u.id+" - "+u.role+") • Cloud Synced ✓"; if(!isLeader()){document.getElementById('tabBtn-users').style.display='none'; document.getElementById('tabBtn-settings').style.display='none';} fillFormForPublisher(); showTab('home'); showDash('cleaning'); loadData();};
+window.logout=function(){location.reload();};
+window.showTab=function(t){document.getElementById('sideMenu').classList.add('hidden'); document.getElementById('dotMenu').classList.add('hidden'); currentTab=t; if(t==='meetings'){meetingsDirty=false; renderMeetings();} if(t==='territory'){terrDirty=false; renderTerritory();} if(t==='events'){eventsDirty=false; renderEvents();} if(t==='s21'){renderS21();} if(t==='dashboard'){showDash(currentDash);} if(t==='reminders'){document.getElementById('remDay').value=reminders.day; document.getElementById('remTime').value=reminders.time; document.getElementById('remMsg').value=reminders.msg; document.getElementById('remWho').value=reminders.who; document.getElementById('remOn').checked=reminders.on; ['remDay','remTime','remMsg','remWho','remOn'].forEach(id=>{document.getElementById(id).disabled=!isLeader();}); document.getElementById('notifStatus').innerText="Notification permission: "+(Notification.permission||'not asked'); checkReportReminder();} ['home','add','meetings','territory','events','users','settings','reminders','s21','dashboard','report'].forEach(x=>{let el=document.getElementById('tab-'+x); if(el) el.classList.toggle('hidden',x!==t); let b=document.getElementById('tabBtn-'+x); if(b) b.classList.toggle('active',x===t);});};
+function fillFormForPublisher(){if(isLeader()) return; let p=publishers.find(x=>x.id===currentUser.id); if(p) loadIntoForm(p); }
+function loadIntoForm(p){document.getElementById('fName').value=p.name||''; document.getElementById('fId').value=p.id||''; document.getElementById('fDob').value=p.dob||''; document.getElementById('fBap').value=p.bap||''; document.getElementById('fSex').value=p.sex||''; document.getElementById('fHope').value=p.hope||''; document.getElementById('fAppoint').value=p.appoint||''; document.getElementById('fPioneer').value=p.pioneer||'Publisher'; document.getElementById('fGroup').value=p.group||''; document.getElementById('fYear').value=p.year||'2025-2026'; currentPic=p.pic||''; let img=document.getElementById('picPreview'); if(currentPic){img.src=currentPic; img.style.display='block';} else img.style.display='none'; buildMonths(p.months); checkLock(p);}
+function checkLock(p){let msg=document.getElementById('lockMsg'); if(!p||!p._savedAt){msg.innerText='';return;} if(!isLeader() && (Date.now()-p._savedAt)>86400000){msg.innerText='🔒 Locked - over 1 day old. Only Secretary / Appointed Brother can edit.';} else msg.innerText='';}
+window.clearForm=function(){['fName','fId','fDob','fBap','fGroup'].forEach(id=>document.getElementById(id).value=''); document.getElementById('fSex').value=''; document.getElementById('fHope').value=''; document.getElementById('fAppoint').value=''; document.getElementById('fPioneer').value='Publisher'; currentPic=''; document.getElementById('picPreview').style.display='none'; buildMonths(null);};
+window.saveRecord=async function(){let name=document.getElementById('fName').value.trim(); let id=document.getElementById('fId').value.trim().toUpperCase(); if(!name||!id){alert('Name + ID required'); return;} if(!isLeader()){id=currentUser.id;} let existing=publishers.find(x=>x.id===id); if(existing && !isLeader() && existing._savedAt && (Date.now()-existing._savedAt)>86400000){alert('🔒 Locked - You cannot edit after 1 day. Only Secretary / Appointed Brother can edit.'); return;} let months=MONTHS.map((m,i)=>({month:m,shared:document.getElementById('mShared'+i).checked,studies:+document.getElementById('mStud'+i).value||0,aux:document.getElementById('mAux'+i).checked,hours:+document.getElementById('mHours'+i).value||0,remarks:document.getElementById('mRem'+i).value})); let rec={id,name,dob:document.getElementById('fDob').value,bap:document.getElementById('fBap').value,sex:document.getElementById('fSex').value,hope:document.getElementById('fHope').value,appoint:document.getElementById('fAppoint').value,pioneer:document.getElementById('fPioneer').value,group:document.getElementById('fGroup').value,year:document.getElementById('fYear').value,months,pic:currentPic,totalHours:months.reduce((a,x)=>a+x.hours,0),totalStudies:months.reduce((a,x)=>a+x.studies,0),_savedAt: existing && !isLeader() ? existing._savedAt : Date.now()}; if(existing){Object.assign(existing,rec);} else publishers.push(rec); await saveCloud(); alert('✅ Saved & Synced!'); showTab('s21');};
