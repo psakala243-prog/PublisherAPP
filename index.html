@@ -143,4 +143,33 @@ window.renderFieldList=function(){let mk=fsMonthKey();let mine=fieldRecords.filt
 window.autoSendNow=function(){let mk=fsMonthKey();let uid=currentUser?currentUser.id:'';if(!uid){alert('Login first');return}let mine=fieldRecords.filter(r=>r.userId===uid&&fsMonthKey(r.date)===mk);if(!mine.length){alert('No records this month');return}let totH=mine.reduce((a,b)=>a+b.hours,0);let totSt=mine.reduce((a,b)=>a+b.studies,0);let svcIdx=(new Date().getMonth()+3)%12;let idx=publishers.findIndex(p=>p.id===uid||p.name===(currentUser?currentUser.name:''));if(idx<0){publishers.push({name:currentUser.name,id:uid,months:MONTHS.map(()=>({shared:false,studies:0,aux:false,hours:0,remarks:""})),totalHours:0,totalStudies:0,pic:""});idx=publishers.length-1}let p=publishers[idx];if(!p.months)p.months=MONTHS.map(()=>({shared:false,studies:0,aux:false,hours:0,remarks:""}));let old=p.months[svcIdx]||{shared:false,studies:0,aux:false,hours:0,remarks:""};p.months[svcIdx]={shared:totH>0||totSt>0,studies:totSt,aux:old.aux||false,hours:totH,remarks:old.remarks||''};p.totalHours=p.months.reduce((a,b)=>a+(b.hours||0),0);p.totalStudies=p.months.reduce((a,b)=>a+(b.studies||0),0);fieldSent[mk+'_'+uid]=true;saveFieldOnly();saveCloudFast();renderFieldList();alert('✅ Sent to S-21: '+totH+' hrs, '+totSt+' studies ONLY');};
 window.checkAutoSend=function(){let today=new Date();if(today.getDate()===30){let mk=fsMonthKey();let uid=currentUser?currentUser.id:'';if(uid&&!fieldSent[mk+'_'+uid]){autoSendNow();}}};
 loadOffline();updateOnlineBadge();loadData();
+
+<script>
+// FIX LOGIN ONLY - No look change
+window.doLogin=function(){
+let id=document.getElementById('loginId').value.trim().toUpperCase();
+let pass=document.getElementById('loginPass').value.trim();
+document.getElementById('loginMsg').innerText='Trying...';
+// 1. Always allow SECRETARY / admin123 even if data got lost
+if(id==='SECRETARY'&&pass==='admin123'){
+currentUser={id:'SECRETARY',name:'Secretary',pass:'admin123',role:'secretary'};
+currentRole='secretary';
+}else{
+// 2. Else check saved users
+loadOffline();
+let u=users.find(x=>x.id===id&&x.pass===pass);
+if(!u){document.getElementById('loginMsg').innerText='❌ Wrong ID or Password - Try SECRETARY / admin123';return;}
+currentUser=u;currentRole=u.role||'publisher';
+}
+document.getElementById('loginScreen').classList.add('hidden');
+document.getElementById('appScreen').classList.remove('hidden');
+document.getElementById('whoLine').innerHTML='Logged in as <b>'+currentUser.name+'</b>';
+document.getElementById('whoLine2').innerHTML='Logged in as <b>'+currentUser.name+'</b>';
+document.getElementById('greetingBox').innerText=getGreeting()+', '+currentUser.name+'!';
+let dn=document.getElementById('dialName');if(dn)dn.value=currentUser.name;
+try{renderList();}catch(e){}
+try{showTab('home');}catch(e){}
+try{loadData();}catch(e){}
+};
+</script>
 </script></body></html>
