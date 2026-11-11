@@ -254,5 +254,86 @@ let l=document.getElementById('s21List');if(!l)return;
 let f=publishers.filter(p=>p.name.toLowerCase().includes(q));
 l.innerHTML=f.map(p=>{let idx=publishers.indexOf(p);return `<div class="card"><b>${p.name}</b><br><span class="small">ID: ${p.id} | ${p.appoint} | Hours: ${p.totalHours||0}</span><br><button class="btn-blue" onclick="viewPublisher(${idx})">👁️ View</button><button class="btn-green" onclick="editPublisher(${idx})">✏️ Edit</button><button class="btn-gray" onclick="printPublisher(${idx})">🖨️ Print</button>${isLeader()?`<button class="btn-red" onclick="if(confirm('Delete?')){publishers.splice(${idx},1);saveCloudFast();renderS21()}">Delete</button>`:''}</div>`}).join('')||'No publishers';
 }
+</script><script>
+// Fix HOPE - change dropdown to Other sheep / Anointed
+function fixHope(){
+let h=document.getElementById('fHope');
+if(h){h.innerHTML='<option>Other sheep</option><option>Anointed</option>';}
+}
+fixHope();
+function hopeLabel(p){
+let v=p.hope||'';
+if(v==='Earthly')return 'Other sheep';
+if(v==='Heavenly')return 'Anointed';
+return v||'Other sheep';
+}
+function hopeCheck(p,want){
+let v=hopeLabel(p);
+return v===want?'☑':'☐';
+}
+
+// Fix VIEW to show Other sheep / Anointed
+function viewPublisher(i){
+let p=publishers[i];
+let pa=document.getElementById('printArea');
+pa.innerHTML=`
+<div style="font-family:Arial;padding:12px;background:#fff;color:#000">
+<h2 style="text-align:center">CONGREGATION'S PUBLISHER RECORD</h2>
+<p><b>Name:</b> ${p.name||''}</p>
+<p><b>Date of birth:</b> ${p.dob||''} &nbsp; ${p.sex==='Male'?'☑ Male ☐ Female':'☐ Male ☑ Female'}</p>
+<p><b>Date of baptism:</b> ${p.bap||''} &nbsp; ${hopeCheck(p,'Other sheep')} Other sheep &nbsp; ${hopeCheck(p,'Anointed')} Anointed</p>
+<p>${p.appoint||''} | ${p.pioneer||''} | Group: ${p.group||''} | Hope: <b>${hopeLabel(p)}</b></p>
+<table border="1" style="width:100%;border-collapse:collapse;font-size:13px">
+<tr><th>Service Year</th><th>Shared</th><th>Bible Studies</th><th>Aux Pioneer</th><th>Hours</th><th>Remarks</th></tr>
+${MONTHS.map((m,mi)=>{let d=p.months&&p.months[mi]?p.months[mi]:{};return `<tr><td>${m}</td><td style="text-align:center">${d.shared?'☑':'☐'}</td><td style="text-align:center">${d.studies||''}</td><td style="text-align:center">${d.aux?'☑':'☐'}</td><td style="text-align:center">${d.hours||''}</td><td>${d.remarks||''}</td></tr>`}).join('')}
+<tr><td colspan="4" style="text-align:right"><b>Total</b></td><td style="text-align:center"><b>${p.totalHours||0}</b></td><td></td></tr>
+</table>
+<br><button class="btn-green" onclick="editPublisher(${i})">✏️ Edit This Record</button>
+<button class="btn-blue" onclick="printPublisher(${i})">🖨️ Print</button>
+<button class="btn-gray" onclick="document.getElementById('printArea').style.display='none';showTab('s21')">⬅ Back</button>
+</div>`;
+pa.style.display='block';
+window.scrollTo(0,0);
+}
+
+// Fix PRINT to show Other sheep / Anointed
+function printPublisher(i){
+let p=publishers[i];
+let pa=document.getElementById('printArea');
+pa.innerHTML=`
+<div style="font-family:Arial;padding:10px;background:#fff;color:#000">
+<h2 style="text-align:center">CONGREGATION'S PUBLISHER RECORD</h2>
+<p><b>Name:</b> ${p.name||''}</p>
+<p><b>Date of birth:</b> ${p.dob||''} &nbsp; ${p.sex==='Male'?'☑ Male':'☐ Male'} ${p.sex==='Female'?'☑ Female':'☐ Female'}</p>
+<p><b>Date of baptism:</b> ${p.bap||''} &nbsp; ${hopeCheck(p,'Other sheep')} Other sheep &nbsp; ${hopeCheck(p,'Anointed')} Anointed</p>
+<p>${p.appoint||''} | ${p.pioneer||''}</p>
+<table border="1" style="width:100%;border-collapse:collapse;font-size:13px">
+<tr><th>Service Year</th><th>Shared in Ministry</th><th>Bible Studies</th><th>Auxiliary Pioneer</th><th>Hours</th><th>Remarks</th></tr>
+${MONTHS.map((m,mi)=>{let d=p.months&&p.months[mi]?p.months[mi]:{};return `<tr><td>${m}</td><td style="text-align:center">${d.shared?'☑':'☐'}</td><td style="text-align:center">${d.studies||''}</td><td style="text-align:center">${d.aux?'☑':'☐'}</td><td style="text-align:center">${d.hours||''}</td><td>${d.remarks||''}</td></tr>`}).join('')}
+<tr><td colspan="4" style="text-align:right"><b>Total</b></td><td style="text-align:center"><b>${p.totalHours||0}</b></td><td></td></tr>
+</table></div>`;
+pa.style.display='block';
+window.print();
+setTimeout(()=>pa.style.display='none',800);
+}
+
+// Fix EDIT to load Other sheep / Anointed
+function editPublisher(i){
+let p=publishers[i];
+document.getElementById('fName').value=p.name||'';
+document.getElementById('fId').value=p.id||'';
+document.getElementById('fDob').value=p.dob||'';
+document.getElementById('fBap').value=p.bap||'';
+document.getElementById('fSex').value=p.sex||'Male';
+document.getElementById('fHope').value=hopeLabel(p);
+document.getElementById('fAppoint').value=p.appoint||'Publisher';
+document.getElementById('fPioneer').value=p.pioneer||'Regular Publisher';
+document.getElementById('fGroup').value=p.group||'';
+document.getElementById('fYear').value=p.year||'2026';
+buildMonths(p);
+document.getElementById('printArea').style.display='none';
+showTab('record');
+window.scrollTo(0,0);
+}
 </script></body>
 </html>
