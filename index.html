@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#111827">
+<title>PublisherAPP - Chipunka Congregation</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:#f3f4f6;color:#111827;padding-bottom:90px}
+.hidden{display:none!important} .card{background:#fff;border-radius:14px;padding:14px;margin:10px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+input,select{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:10px;margin:6px 0;font-size:15px;background:#fff}
+input[type=checkbox]{width:auto} input[type=time]{min-height:44px}
+button{border:0;border-radius:10px;padding:11px 14px;font-size:15px;font-weight:700;cursor:pointer;margin:4px 2px}
+.btn-green{background:#16a34a;color:#fff}.btn-blue{background:#2563eb;color:#fff}.btn-gray{background:#e5e7eb}.btn-red{background:#dc2626;color:#fff}
+label{font-size:13px;font-weight:700;color:#374151} .small{font-size:13px;color:#6b7280} h3{margin:6px 0} h4{margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid #e5e7eb;padding:6px;text-align:left} th{background:#111827;color:#fff}
+.topbar{position:sticky;top:0;z-index:20;background:#111827;color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+.topbar b{font-size:18px} .dots{font-size:22px;background:none;color:#fff;padding:4px 10px}
+.dotMenu{position:fixed;top:56px;right:10px;z-index:50;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25);width:260px;max-height:80vh;overflow:auto;padding:8px}
+.dotMenu button{display:block;width:100%;text-align:left;background:#f9fafb;color:#111}.dotMenu .lbl{font-size:11px;font-weight:800;color:#6b7280;padding:10px 8px 4px}
+.greetBox{background:#fef9c3;border:1px solid #f59e0b;border-radius:12px;padding:12px;margin:10px;font-weight:700}
+.tabs-label{font-size:11px;font-weight:800;color:#6b7280;padding:12px 10px 4px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;padding:0 10px}.tabs button{flex:1;min-width:70px;background:#fff;font-size:12px}.tabs button.active{background:#111827;color:#fff}
+.homeGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.homeGrid button{background:#fff;padding:16px;font-size:14px}
+.dashGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.dashGrid button{background:#fff;padding:14px}.dashGrid button.active{background:#111827;color:#fff}
+.profilePic{width:90px;height:90px;object-fit:cover;border-radius:50%;border:3px solid #16a34a}
+.pubCard{position:relative}.pubActions{display:none;gap:8px;margin-top:10px;flex-wrap:wrap}.pubActions.show{display:flex}
+.notifUnread{border-left:5px solid #dc2626;background:#fff7ed}
+#bellBadge{position:absolute;top:-6px;right:-6px;background:#dc2626;color:#fff;font-size:11px;min-width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.footerHelp{text-align:center;font-size:13px;color:#6b7280;padding:16px}
+.loginWrap{max-width:420px;margin:30px auto;padding:10px}.loginCard{background:#fff;border-radius:16px;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.1);text-align:center}
+@media print{body *{visibility:hidden}#printArea,#printArea *{visibility:visible}#printArea{display:block!important;position:absolute;left:0;top:0;width:100%} .topbar,.card,.dotMenu{display:none!important}}
+#printArea{display:none;background:#fff;padding:10px}
+</style>
+</head>
+<body>
+<div id="printArea"></div>
+<div id="loginScreen">
+<div class="loginWrap"><div class="loginCard">
+<div style="font-size:48px">📖</div>
+<h2 style="margin:4px 0">PublisherAPP</h2>
+<p class="small" style="margin:0">Chipunka Congregation<br>Works Online + Offline</p>
+<div style="background:#f0fdf4;border-radius:12px;padding:10px;margin:12px 0;text-align:left" class="small">✅ <b>Login:</b> SECRETARY / admin123<br>✅ First open needs internet once, then works offline<br>✅ Your data saves to your phone + cloud</div>
+<label style="text-align:left;display:block">Publisher ID</label>
+<input id="loginId" placeholder="e.g. SECRETARY" autocomplete="username">
+<label style="text-align:left;display:block">Password</label>
+<input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
+<button class="btn-green" onclick="doLogin()" style="width:100%;padding:14px;font-size:17px">🔓 Login</button>
+<p id="loginMsg" class="small" style="color:#dc2626"></p>
+<p class="small">Secretary: 0977399807<br>Need help? WhatsApp Secretary</p>
+<button class="btn-blue" onclick="window.open('https://wa.me/260977399807','_blank')" style="width:100%">🟢 WhatsApp Secretary</button>
+</div></div>
+</div>
+<div id="appScreen" class="hidden">
+<div class="topbar"><div><b>📖 PublisherAPP</b><br><span style="font-size:12px;opacity:.8">Chipunka Congregation</span></div><div style="position:relative"><button onclick="openNotifCenter()" style="background:none;color:#fff;font-size:22px;position:relative">🔔<span id="bellBadge" class="hidden">0</span></button><button class="dots" onclick="toggleDotMenu()">⋮</button></div></div><div id="dotMenu" class="dotMenu hidden">
+<button onclick="showTab('home');toggleDotMenu()">🏠 &nbsp; Home</button>
+<button onclick="openNotifCenter();toggleDotMenu()">🔔 &nbsp; Notifications <span id="dotNotifCount"></span></button>
+<button onclick="showTab('devotion');toggleDotMenu()">🙏 &nbsp; Devotionals</button>
+<button onclick="showTab('dial');toggleDotMenu()">📞 &nbsp; Dial To Send Report</button>
+<div class="lbl">📄 ALL S-21s</div>
+<button onclick="showTab('s21');toggleDotMenu()">📄 &nbsp; All S-21s</button>
+<div class="lbl">📌 ASSIGNMENTS - EVERYONE CAN SEE</div>
+<button onclick="showTab('assign');toggleDotMenu()">📌 &nbsp; Assignments</button>
+<div class="lbl">📊 REPORTS - SECRETARY + APPOINTED ONLY</div>
+<button onclick="showReport('group');toggleDotMenu()">📊 &nbsp; Totals by Group</button>
+<button onclick="showReport('counts');toggleDotMenu()">👥 &nbsp; Congregation Counts</button>
+<button onclick="showReport('month');toggleDotMenu()">📖 &nbsp; Totals Per Month</button>
+<button onclick="showReport('pioneers');toggleDotMenu()">🟢🟡 &nbsp; Regular + Auxiliary Pioneers</button>
+<div class="lbl">📊 DASHBOARD</div>
+<button onclick="showTab('dashboard');toggleDotMenu()">📊 &nbsp; Dashboard</button>
+<button onclick="openWhatsApp();toggleDotMenu()">🟢 &nbsp; WhatsApp Secretary</button>
+<button onclick="logout()">🚪 &nbsp; Logout</button>
+</div>
+<div id="greetingBox" class="greetBox"></div>
+<div id="cleanNotifyBanner" style="background:#fee2e2;border:1px solid #dc2626;border-radius:12px;padding:12px;display:none;margin:10px 0"></div>
+<p id="whoLine" class="small"></p>
+<div id="sideMenu" class="hidden">
+<div class="tabs-label">🏠 HOME</div>
+<div class="tabs">
+<button id="tabBtn-home" class="active" onclick="showTab('home')">🏠<br>Home</button>
+<button id="tabBtn-notif" onclick="openNotifCenter()">🔔<br>Notifications</button>
+<button id="tabBtn-devotion" onclick="showTab('devotion')">🙏<br>Devotionals</button>
+<button id="tabBtn-dial" onclick="showTab('dial')">📞<br>Dial Report</button>
+</div>
+<div class="tabs-label">📖 MY WORK</div>
+<div class="tabs">
+<button id="tabBtn-dashboard" onclick="showTab('dashboard')">📊<br>Dashboard</button>
+<button id="tabBtn-s21" onclick="showTab('s21')">📄<br>All S-21s</button>
+<button id="tabBtn-assign" onclick="showTab('assign')">📌<br>Assignments</button>
+<button id="tabBtn-add" onclick="showTab('add')">➕<br>Record</button>
+</div>
+<div class="tabs-label">⚙️ CONGREGATION</div>
+<div class="tabs">
+<button id="tabBtn-meetings" onclick="showTab('meetings')">📅<br>Meetings</button>
+<button id="tabBtn-territory" onclick="showTab('territory')">🗺️<br>Territory</button>
+<button id="tabBtn-events" onclick="showTab('events')">🎉<br>Events</button>
+<button id="tabBtn-reminders" onclick="showTab('reminders')">🔔<br>Reminders</button>
+<button id="tabBtn-users" onclick="showTab('users')">👥<br>Users</button>
+<button id="tabBtn-settings" onclick="showTab('settings')">⚙️<br>Settings</button>
+</div>
+</div>
+<div id="tab-home" class="card">
+<h3>🏠 Home - Chipunka Congregation</h3>
+<p class="small">Welcome! Tap 🔔 to see missed announcements - even if you were offline.</p>
+<div id="offlineBadge" class="small" style="background:#eff6ff;padding:8px;border-radius:10px">🌐 Checking connection...</div>
+<div class="homeGrid">
+<button class="btn-blue" onclick="showTab('s21')">📄<br>All S-21s</button>
+<button class="btn-green" onclick="showTab('add')">➕<br>My Record</button>
+<button onclick="showTab('dashboard')">📊<br>Dashboard</button>
+<button onclick="showTab('assign')">📌<br>Assignments</button>
+<button onclick="openNotifCenter()">🔔<br>Notifications</button>
+<button onclick="showTab('devotion')">🙏<br>Devotionals</button>
+<button class="btn-green" onclick="showTab('dial')">📞<br>Dial To Send Report</button>
+<button onclick="showTab('meetings')">📅<br>Meetings</button>
+<button onclick="showTab('territory')">🗺️<br>Territory</button>
+<button onclick="showTab('events')">🎉<br>Events</button>
+<button onclick="showTab('reminders')">🔔<br>Reminders</button>
+<button class="btn-green" onclick="openWhatsApp()">🟢<br>WhatsApp Secretary</button>
+</div>
+<p class="small">💡 Hold a name for <b>1 second only</b> in All S-21s to show Print / View / Delete.</p>
+<div id="homeCounts" class="small"></div>
+</div>
+<div id="tab-dial" class="card hidden">
+<h3>📞 Dial To Send Report</h3>
+<p class="small">No internet? Dial or SMS this number to send your report to the Secretary.</p>
+<div class="card" style="background:#111;color:#fff;text-align:center;padding:20px">
+<div style="font-size:14px;opacity:.8">DIALED NUMBER FOR REPORTS</div>
+<div style="font-size:36px;font-weight:900;letter-spacing:2px">0977399807</div>
+<div class="small" style="color:#fff">Chipunka Congregation - Secretary</div>
+<button class="btn-green" onclick="dialReportNumber()" style="width:100%;font-size:18px;padding:14px;margin-top:12px">📞 TAP TO DIAL NOW</button>
+<button class="btn-blue" onclick="smsReportNumber()" style="width:100%;font-size:16px;padding:14px">💬 TAP TO SEND SMS REPORT</button>
+</div>
+<div class="card" style="background:#fef9c3">
+<b>📝 My Report - Fill then tap Dial / SMS</b><br>
+<label>Your Name</label><input id="dialName" placeholder="e.g. John Sakala">
+<label>Month</label><select id="dialMonth"><option>September</option><option>October</option><option>November</option><option>December</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option></select>
+<label>Shared in Ministry?</label><select id="dialShared"><option>Yes - I Shared</option><option>No</option></select>
+<label>Hours</label><input id="dialHours" type="number" placeholder="e.g. 12">
+<label>Bible Studies</label><input id="dialStudies" type="number" placeholder="e.g. 2">
+<label>Auxiliary Pioneer?</label><select id="dialAux"><option>No</option><option>Yes - Auxiliary Pioneer</option></select>
+<label>Remarks</label><input id="dialRemarks" placeholder="e.g. ...">
+<button class="btn-green" onclick="dialReportNumber()">📞 Dial 0977399807 With My Report</button>
+<button class="btn-blue" onclick="smsReportNumber()">💬 SMS My Report To 0977399807</button>
+</div>
+<div class="card" style="background:#eff6ff">
+<b>How to send by SMS - Copy this format:</b><br>
+<span class="small" id="smsPreview">REPORT - Name, Month, Shared, Hours, Studies</span><br>
+<button class="btn-gray" onclick="copySmsFormat()">📋 Copy SMS Format</button>
+<p class="small"><b>Example:</b> REPORT John Sakala, November, Shared Yes, Hours 12, Studies 2</p>
+</div>
+</div><div id="tab-notif" class="card hidden">
+<h3>🔔 Notification Center</h3>
+<p class="small"><b>Offline?</b> When you open app, you still see all missed announcements here. <b>Push:</b> Android + iPhone, low data. <b>SMS:</b> Only urgent - SMS costs money in Zambia.</p>
+<div class="card" style="background:#fef9c3">
+<b>🔔 Push Settings - For Me</b><br>
+<button class="btn-blue" onclick="requestNotif()">🔔 Allow Push Notifications</button>
+<button class="btn-green" onclick="testNotif()">🧪 Test Push Now</button>
+<p id="notifStatus2" class="small"></p>
+</div>
+<div class="card" style="background:#eff6ff">
+<b>📣 Send Announcement - Secretary + Appointed Only</b><br>
+<label>Type</label><select id="notifType"><option>Announcement</option><option>Devotional</option><option>Cleaning</option><option>Assignment</option><option>Urgent - SMS / WhatsApp</option></select>
+<label>Title</label><input id="notifTitle" placeholder="e.g. Meeting Change">
+<label>Message</label><input id="notifBody" placeholder="e.g. Mid-week meeting moved...">
+<button class="btn-green" onclick="sendAnnouncement()">📣 Send To Everyone</button>
+<button class="btn-blue" onclick="sendUrgentWhatsApp()">🟢 Send Urgent via WhatsApp</button>
+</div>
+<button class="btn-gray" onclick="markAllRead()">✓ Mark All As Read</button>
+<div id="notifList"></div>
+</div>
+<div id="tab-devotion" class="card hidden">
+<h3>🙏 Devotionals</h3>
+<p class="small">Daily encouragement for Chipunka Congregation.</p>
+<div id="devotionForm" class="card" style="background:#eff6ff">
+<b>Add Devotional - Secretary + Appointed Only</b><br>
+<label>Title / Scripture</label><input id="devTitle" placeholder="e.g. Psalm 1:1-3">
+<label>Devotional Text</label><input id="devText" placeholder="e.g. ...">
+<button class="btn-green" onclick="addDevotional()">➕ Add Devotional</button>
+</div>
+<div id="devotionList"></div>
+</div>
+<div id="tab-assign" class="card hidden">
+<h3>📌 Assignments - Everyone Can See All Assignments</h3>
+<p class="small">Secretary + Appointed can enter. <b>All publishers can see assignments given to everyone.</b></p>
+<p id="assignSaved" class="small" style="color:#16a34a;font-weight:700"></p>
+<div id="assignForm">
+<label>Publisher Name</label><select id="assignPub"></select>
+<label>Assignment</label><select id="assignType"><option>Public Talk</option><option>Watchtower Reader</option><option>Watchtower Conductor</option><option>Mid-Week Talk</option><option>Student Talk</option><option>Demonstration</option><option>Sound / Audio</option><option>Video / Stage</option><option>Microphone</option><option>Attendant / Usher</option><option>Cleaning</option><option>Field Service Group Overseer</option><option>Other Assignment</option></select>
+<label>Date</label><input id="assignDate" type="date">
+<label>Details / Title</label><input id="assignDetail" placeholder="e.g. Talk No. 12">
+<button id="addAssignBtn" class="btn-blue" onclick="addAssignment()">➕ Add Assignment</button>
+</div>
+<div id="assignList"></div>
+</div>
+<div id="tab-report" class="card hidden">
+<h3 id="reportTitle">📊 Report</h3>
+<p class="small" style="color:#dc2626">🔒 Secretary + Appointed Brother Only</p>
+<div id="reportBox"></div>
+<button class="btn-gray" onclick="showTab('home')">⬅ Back to Home</button>
+</div>
+<div id="tab-dashboard" class="card hidden">
+<h3>📊 DASHBOARD - Chipunka Congregation</h3>
+<div class="dashGrid">
+<button id="dashBtn-cleaning" onclick="showDash('cleaning')">🧹<br>Cleaning Schedule</button>
+<button id="dashBtn-s30" onclick="showDash('s30')">📋<br>S-30</button>
+<button id="dashBtn-talks" onclick="showDash('talks')">🎤<br>Bible Talks Schedule</button>
+<button id="dashBtn-av" onclick="showDash('av')">🎬<br>AUDIO / VIDEO DEPARTMENT</button>
+</div>
+<div id="dash-cleaning" class="hidden">
+<h4>🧹 Cleaning Schedule</h4>
+<p class="small">Select Week - No typing. People set will be notified day before.</p>
+<p id="cleanSaved" class="small" style="color:#16a34a;font-weight:700"></p>
+<label>📅 Select Week</label><select id="cleanWeek"></select>
+<label>👥 Select Publisher</label><select id="cleanGroupSelect"></select>
+<button class="btn-blue" onclick="addPersonToCleaning()">➕ Add This Person To Cleaning</button>
+<div class="small" style="background:#f0fdf4;padding:10px;border-radius:10px;margin:8px 0">Selected: <span id="cleanSelectedList">None yet</span></div>
+<label>Area To Clean</label><input id="cleanArea" placeholder="e.g. Main Hall, Toilets, Yard">
+<button id="addCleanBtn" class="btn-blue" onclick="addCleaning()">➕ Add Cleaning</button>
+<div id="cleanList"></div>
+<button id="saveCleanBtn" class="btn-green" onclick="saveCleaning()">💾 Save Cleaning Schedule</button>
+<div class="card" style="background:#eff6ff"><b>📎 Upload Cleaning PDF / Doc / Picture</b><br><label>Title</label><input id="cleanFileTitle" placeholder="e.g. Cleaning Roster"><label>File</label><input type="file" id="cleanFile" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx"><button class="btn-blue" onclick="uploadFileGeneric('cleanFiles','cleanFileTitle','cleanFile')">📤 Upload</button><div id="cleanFilesList"></div></div>
+</div>
+<div id="dash-s30" class="hidden">
+<h4>📋 S-30 - Congregation Monthly Report</h4>
+<p class="small"><b>Select Month below</b> - Everyone can view.</p>
+<p id="s30Saved" class="small" style="color:#16a34a;font-weight:700"></p>
+<label>📅 SELECT MONTH</label><select id="s30Month"><option>September</option><option>October</option><option>November</option><option>December</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option></select>
+<label>Service Year</label><select id="s30Year"><option>2025-2026</option><option>2026-2027</option></select>
+<label>Publishers Reporting</label><input id="s30Pub" type="number" placeholder="e.g. 45">
+<label>Regular Pioneers Reporting</label><input id="s30Reg" type="number" placeholder="e.g. 7">
+<label>Auxiliary Pioneers Reporting</label><input id="s30Aux" type="number" placeholder="e.g. 2">
+<label>Total Hours</label><input id="s30Hours" type="number" placeholder="e.g. 216">
+<label>Total Bible Studies</label><input id="s30Studies" type="number" placeholder="e.g. 28">
+<label>Mid-Week Attendance</label><input id="s30Mid" type="number" placeholder="e.g. 68">
+<label>Week-End Attendance</label><input id="s30End" type="number" placeholder="e.g. 82">
+<label>Notes</label><input id="s30Notes" placeholder="e.g. ...">
+<button id="saveS30Btn" class="btn-green" onclick="saveS30()">💾 Save S-30</button>
+<div id="s30View"></div>
+<div class="card" style="background:#eff6ff"><b>📎 Upload S-30 - PDF / Picture / Docs</b><br><label>Title</label><input id="s30FileTitle" placeholder="e.g. S-30 - November"><label>File</label><input type="file" id="s30File" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx"><button class="btn-blue" onclick="uploadFileGeneric('s30Files','s30FileTitle','s30File')">📤 Upload</button><div id="s30FilesList"></div></div>
+</div><div id="dash-talks" class="hidden">
+<h4>🎤 Bible Talks Schedule</h4>
+<p class="small">Secretary + Appointed can edit. Everyone can view.</p>
+<p id="talksSaved" class="small" style="color:#16a34a;font-weight:700"></p>
+<label>Date</label><input id="talkDate" type="date">
+<label>Speaker</label><input id="talkSpeaker" placeholder="e.g. Brother John">
+<label>Talk Title</label><input id="talkTitle" placeholder="e.g. Keep Your Eyes on the Prize">
+<label>Meeting</label><select id="talkType"><option>Week-End Meeting</option><option>Mid-Week Meeting</option><option>Public Talk</option></select>
+<button id="addTalkBtn" class="btn-blue" onclick="addTalk()">➕ Add Talk</button>
+<div id="talksList"></div>
+<button id="saveTalksBtn" class="btn-green" onclick="saveTalks()">💾 Save Talks Schedule</button>
+<div class="card" style="background:#eff6ff"><b>📎 Upload Talks PDF / Doc / Picture</b><br><label>Title</label><input id="talkFileTitle" placeholder="e.g. Talks Schedule"><label>File</label><input type="file" id="talkFile" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx"><button class="btn-blue" onclick="uploadFileGeneric('talkFiles','talkFileTitle','talkFile')">📤 Upload</button><div id="talkFilesList"></div></div>
+</div>
+<div id="dash-av" class="hidden">
+<h4>🎬 AUDIO / VIDEO DEPARTMENT</h4>
+<p class="small">Secretary + Appointed can upload. <b>Everyone can view / download.</b></p>
+<div id="avUploadBox">
+<label>Title</label><input id="avTitle" placeholder="e.g. Sound Schedule">
+<label>Upload PDF / Doc / Picture</label><input type="file" id="avFile" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx">
+<button class="btn-blue" onclick="uploadAV()">📤 Upload File</button>
+</div>
+<div id="avList"></div>
+</div>
+</div>
+<div id="tab-s21" class="card hidden">
+<h3>📄 ALL S-21s</h3>
+<p class="small">Hold a name for <b>1 second</b> to show buttons.</p>
+<input id="s21Search" placeholder="🔍 Search S-21 by name..." oninput="renderS21()">
+<div id="s21List"></div>
+</div>
+<div id="tab-add" class="card hidden">
+<h3>CONGREGATION'S PUBLISHER RECORD</h3>
+<div style="text-align:center"><img id="picPreview" class="profilePic" src="" style="display:none"><br>
+<label>Profile Picture</label><input type="file" id="fPic" accept="image/*" onchange="handlePic(event)"></div>
+<input id="fName" placeholder="Name *">
+<input id="fId" placeholder="Publisher ID * e.g. PSAKALA01">
+<label>Date of Birth</label><input id="fDob" type="date">
+<label>Date of Baptism</label><input id="fBap" type="date">
+<label>Sex</label><select id="fSex"><option value="">Select</option><option>Male</option><option>Female</option></select>
+<label>Hope</label><select id="fHope"><option value="">Select</option><option>Other sheep</option><option>Anointed</option></select>
+<label>Appointment</label><select id="fAppoint"><option value="">None</option><option>Elder</option><option>Ministerial servant</option></select>
+<label>Pioneer Status</label><select id="fPioneer"><option value="Publisher">Publisher</option><option value="Auxiliary Pioneer">Auxiliary Pioneer</option><option value="Regular Pioneer">Regular Pioneer</option><option value="Special Pioneer">Special Pioneer</option><option value="Field Missionary">Field Missionary</option></select>
+<label>Field Service Group</label><input id="fGroup" placeholder="e.g. Group 1">
+<label>Service Year</label><select id="fYear"><option>2025-2026</option><option>2026-2027</option><option>2024-2025</option></select>
+<p class="small"><b>Monthly Report - Sept to Aug:</b></p>
+<div style="overflow-x:auto"><table>
+<tr><th>Month</th><th>Shared</th><th>Studies</th><th>Aux Pio.</th><th>Hours</th><th>Remarks</th></tr>
+<tbody id="monthsBody"></tbody>
+<tr><td><b>Total</b></td><td id="totShared">-</td><td id="totStudies">0</td><td id="totAux">-</td><td id="totHours">0</td><td></td></tr>
+</table></div>
+<p id="lockMsg" class="small" style="color:#dc2626"></p>
+<button class="btn-green" onclick="saveRecord()">💾 Save (Syncs to all)</button>
+<button class="btn-blue" onclick="printOne(document.getElementById('fId').value)">🖨️ Print This S-21</button>
+<button class="btn-gray" onclick="clearForm()">Clear</button>
+</div>
+<div id="tab-meetings" class="card hidden">
+<h3>📅 Meetings - Chipunka Congregation</h3>
+<p id="meetingsLockMsg" class="small" style="color:#dc2626"></p>
+<p id="meetSavedMsg" class="small" style="color:#16a34a;font-weight:700"></p>
+<div style="background:#eff6ff;padding:12px;border-radius:12px">
+<h4>Mid-Week Meeting</h4>
+<label>Meeting Day</label><select id="midDay"><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option></select>
+<label>Meeting Time</label><input id="midTime" type="time" value="17:30">
+</div>
+<h4>📊 Mid-Week Attendance - 5 Weeks</h4>
+<div style="overflow-x:auto"><table><tr><th>Month</th><th>Week 1</th><th>Week 2</th><th>Week 3</th><th>Week 4</th><th>Week 5</th><th>Average</th></tr><tbody id="attMidBody"></tbody></table></div>
+<div style="background:#f0fdf4;padding:12px;border-radius:12px;margin-top:14px">
+<h4>Week-End Meeting</h4>
+<label>Meeting Day</label><select id="endDay"><option>Sunday</option><option>Saturday</option></select>
+<label>Meeting Time</label><input id="endTime" type="time" value="09:00">
+</div>
+<h4>📊 Week-End Attendance - 5 Weeks</h4>
+<div style="overflow-x:auto"><table><tr><th>Month</th><th>Week 1</th><th>Week 2</th><th>Week 3</th><th>Week 4</th><th>Week 5</th><th>Average</th></tr><tbody id="attEndBody"></tbody></table></div>
+<button id="saveMeetBtn" class="btn-green" onclick="saveMeetings()">💾 Save Meetings</button>
+<button class="btn-gray" onclick="refreshMeetings()">🔄 Refresh</button>
+</div><div id="tab-territory" class="card hidden">
+<h3>🗺️ Territory Assignment Record - S-13</h3>
+<p class="small">Secretary + Appointed can edit. Everyone can view.</p>
+<p id="terrSavedMsg" class="small" style="color:#16a34a;font-weight:700"></p>
+<div id="myTerrBox"></div>
+<div id="terrFullView">
+<label>Territory Year</label><input id="terrYear" value="2025-2026">
+<div style="overflow-x:auto"><table><tr><th>Terr. No.</th><th>Last Completed</th><th>Name 1</th><th>Assigned</th><th>Completed</th><th>Name 2</th><th>Assigned</th><th>Completed</th><th>Name 3</th><th>Assigned</th><th>Completed</th><th>Name 4</th><th>Assigned</th><th>Completed</th></tr><tbody id="terrBody"></tbody></table></div>
+<p id="terrLockMsg" class="small" style="color:#dc2626"></p>
+<button id="saveTerrBtn" class="btn-green" onclick="saveTerritory()">💾 Save Territory</button>
+<button id="addTerrBtn" class="btn-blue" onclick="addTerrRow()">➕ Add Territory Row</button>
+<button class="btn-blue" onclick="printTerritory()">🖨️ Print Territory</button>
+<button class="btn-gray" onclick="refreshTerritory()">🔄 Refresh</button>
+</div>
+</div>
+<div id="tab-events" class="card hidden">
+<h3>🎉 Events - Chipunka Congregation</h3>
+<p id="eventsLockMsg" class="small" style="color:#dc2626"></p>
+<p id="eventsSavedMsg" class="small" style="color:#16a34a;font-weight:700"></p>
+<div class="card"><h4>Circuit Overseer Visit</h4><label>Start Date</label><input id="evCOStart" type="date"><label>End Date</label><input id="evCOEnd" type="date"><label>Venue</label><input id="evCOVenue" placeholder="e.g. Kingdom Hall"><label>Notes</label><input id="evCONotes" placeholder="e.g. ..."></div>
+<div class="card"><h4>Memorial</h4><label>Date</label><input id="evMemDate" type="date"><label>Time</label><input id="evMemTime" type="time"><label>Venue</label><input id="evMemVenue" placeholder="e.g. Kingdom Hall"><label>Notes</label><input id="evMemNotes" placeholder="e.g. ..."></div>
+<div class="card"><h4>Convention</h4><label>Start Date</label><input id="evConvStart" type="date"><label>End Date</label><input id="evConvEnd" type="date"><label>Venue</label><input id="evConvVenue" placeholder="e.g. ..."><label>Notes</label><input id="evConvNotes" placeholder="e.g. ..."></div>
+<div class="card"><h4>Assembly</h4><label>Start Date</label><input id="evAsmStart" type="date"><label>End Date</label><input id="evAsmEnd" type="date"><label>Venue</label><input id="evAsmVenue" placeholder="e.g. ..."><label>Notes</label><input id="evAsmNotes" placeholder="e.g. ..."></div>
+<button id="saveEventsBtn" class="btn-green" onclick="saveEvents()">💾 Save Events</button>
+<button class="btn-gray" onclick="refreshEvents()">🔄 Refresh</button>
+</div>
+<div id="tab-reminders" class="card hidden">
+<h3>🔔 Reminders - Monthly Report Reminder</h3>
+<p id="remSavedMsg" class="small" style="color:#16a34a;font-weight:700"></p>
+<div id="reminderBanner" style="background:#fef9c3;border:1px solid #f59e0b;border-radius:12px;padding:12px;display:none;margin:10px 0"></div>
+<div class="card" style="background:#eff6ff"><b>⚙️ Reminder Settings - Secretary + Appointed Only</b><br>
+<label>Day of Month to Remind</label><input id="remDay" type="number" min="1" max="31" value="25">
+<label>Time to Remind</label><input id="remTime" type="time" value="18:00">
+<label>Reminder Message</label><input id="remMsg" placeholder="e.g. Please send your monthly report!">
+<label>Who To Remind</label><select id="remWho"><option value="all">All Publishers</option><option value="notReported">Only Those Who Have NOT Reported</option><option value="pioneers">Only Pioneers</option></select>
+<label><input type="checkbox" id="remOn" checked> Turn Reminders ON</label><br>
+<button class="btn-green" onclick="saveReminders()">💾 Save Reminder Settings</button>
+</div>
+<div class="card"><b>📋 Not Yet Reported This Month</b><br><div id="notReportedList"></div></div>
+<div class="card" style="background:#f0fdf4"><b>⏰ Auto Reminder Note</b><br><span class="small">On the day you set, a banner will show on Home. Secretary can also send WhatsApp reminder to those not reported.</span></div>
+</div>
+<div id="tab-users" class="card hidden">
+<h3>👥 Users - Login Accounts</h3>
+<p class="small">Secretary + Appointed can create users.</p>
+<div id="usersList"></div>
+<div class="card" style="background:#eff6ff"><b>Create User</b><br>
+<label>User ID</label><input id="uId" placeholder="e.g. JSAKALA01">
+<label>Full Name</label><input id="uName" placeholder="e.g. John Sakala">
+<label>Password</label><input id="uPass" placeholder="e.g. 1234">
+<label>Role</label><select id="uRole"><option value="publisher">Publisher</option><option value="appointed">Appointed</option><option value="secretary">Secretary</option></select>
+<button class="btn-green" onclick="createUser()">➕ Create User</button>
+</div>
+<div class="card"><b>Change Secretary Password</b><br><label>New Password</label><input id="newSecPass" placeholder="New password"><button class="btn-blue" onclick="changeSecPass()">Change Password</button></div>
+</div>
+<div id="tab-settings" class="card hidden">
+<h3>⚙️ Settings</h3>
+<p id="whoLine2" class="small"></p>
+<p id="saveStatus" class="small"></p>
+<p id="onlineStatus" class="small"></p>
+<div class="card" style="background:#fef9c3"><b>🔔 Notifications</b><br>
+<button class="btn-blue" onclick="requestNotif()">🔔 Allow Push Notifications</button>
+<button class="btn-green" onclick="testNotif()">🧪 Test Push</button>
+<p id="notifStatus" class="small"></p></div>
+<button class="btn-green" onclick="openWhatsApp()">🟢 WhatsApp Secretary - 0977399807</button><br>
+<button class="btn-blue" onclick="exportData()">⬇️ Export Backup (JSON)</button>
+<label>Import Backup</label><input type="file" id="importFile" accept=".json" onchange="importData(event)">
+<button class="btn-red" onclick="logout()">🚪 Logout</button>
+<p class="small">PublisherAPP - Chipunka Congregation<br>Version 2.0 - Online + Offline</p>
+</div>
+<div class="footerHelp">Need help? WhatsApp Secretary: 0977399807</div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<script>
+let firebaseConfig={apiKey:"AIzaSyB8j9I3p9HcHcHcHcHcHcHcHcHcHcHcHc",authDomain:"chipunka-publisherapp.firebaseapp.com",databaseURL:"https://chipunka-publisherapp-default-rtdb.firebaseio.com",projectId:"chipunka-publisherapp",storageBucket:"chipunka-publisherapp.appspot.com",messagingSenderId:"123456789012",appId:"1:123456789012:web:abcdef123456"};
+let firebaseOK=false; try{if(typeof firebase!=="undefined"){firebase.initializeApp(firebaseConfig); firebaseOK=true;}}catch(e){firebaseOK=false;}
+let MONTHS=["September","October","November","December","January","February","March","April","May","June","July","August"];
+let publishers=[]; let users=[{id:"SECRETARY",name:"Secretary",pass:"admin123",role:"secretary"}];
+let meetings={midDay:"Thursday",midTime:"17:30",endDay:"Sunday",endTime:"09:00",mid:[0,0,0,0,0],end:[0,0,0,0,0]};
+let territory={year:"2025-2026",rows:[]}; let events={}; let reminders={day:25,time:"18:00",msg:"Please send your monthly report to the Secretary!",who:"all",on:true};
+let cleaning=[]; let s30={}; let talks=[]; let avFiles=[]; let cleanFiles=[]; let s30Files=[]; let talkFiles=[];
+let assignments=[]; let notifications=[]; let devotionals=[]; let currentUser=null; let currentRole="publisher"; let currentTab="home"; let currentDash="cleaning"; let currentPic=""; let pressTimer=null; let meetDirty=false; let terrDirty=false; let eventsDirty=false;
+function isLeader(){return currentRole==="secretary"||currentRole==="appointed";}
+function getGreeting(){let h=new Date().getHours(); if(h<12) return "Good morning"; if(h<18) return "Good afternoon"; return "Good evening";}
+function normalizeMeetings(m){if(!m||typeof m!=="object") return {midDay:"Thursday",midTime:"17:30",endDay:"Sunday",endTime:"09:00",mid:[0,0,0,0,0],end:[0,0,0,0,0]}; let o={midDay:m.midDay||"Thursday",midTime:m.midTime||"17:30",endDay:m.endDay||"Sunday",endTime:m.endTime||"09:00",mid:Array.isArray(m.mid)?m.mid.slice(0,5):[0,0,0,0,0],end:Array.isArray(m.end)?m.end.slice(0,5):[0,0,0,0,0]}; while(o.mid.length<5)o.mid.push(0); while(o.end.length<5)o.end.push(0); o.mid=o.mid.map(x=>+x||0); o.end=o.end.map(x=>+x||0); return o;}
+function emptyTerrRow(){return {terrNo:"",lastComp:"",n1:"",d1a:"",d1c:"",n2:"",d2a:"",d2c:"",n3:"",d3a:"",d3c:"",n4:"",d4a:"",d4c:""};}
+function normalizeTerritory(t){if(!t||typeof t!=="object") return {year:"2025-2026",rows:[emptyTerrRow(),emptyTerrRow(),emptyTerrRow(),emptyTerrRow(),emptyTerrRow()]}; let rows=Array.isArray(t.rows)?t.rows:[]; if(!rows.length) rows=[emptyTerrRow(),emptyTerrRow(),emptyTerrRow(),emptyTerrRow(),emptyTerrRow()]; rows=rows.map(r=>({...emptyTerrRow(),...r})); return {year:t.year||"2025-2026",rows}; }
+function normalizeEvents(e){let keys=["coStart","coEnd","coVenue","coNotes","memDate","memTime","memVenue","memNotes","convStart","convEnd","convVenue","convNotes","asmStart","asmEnd","asmVenue","asmNotes"]; let o={}; keys.forEach(k=>o[k]=(e&&e[k])||""); return o;}
+meetings=normalizeMeetings(meetings); territory=normalizeTerritory(territory); events=normalizeEvents(events);
+function updateOnlineBadge(){let el=document.getElementById('offlineBadge'); let el2=document.getElementById('onlineStatus'); let on=navigator.onLine; let txt=on?"🌐 Online - Syncing to cloud":"📴 Offline Mode - Using saved data on this phone. Will sync when online."; if(el) el.innerText=txt; if(el2) el2.innerText=txt;}
+window.addEventListener('online',updateOnlineBadge); window.addEventListener('offline',updateOnlineBadge); updateOnlineBadge();
+function buildMonths(data){let b=document.getElementById('monthsBody'); if(!b) return; b.innerHTML=MONTHS.map((m,i)=>{let d=data&&data[i]?data[i]:{}; return `<tr><td>${m}</td><td style="text-align:center"><input type="checkbox" id="mShared${i}" ${d.shared?"checked":""}></td><td><input type="number" id="mStud${i}" value="${d.studies||0}"></td><td style="text-align:center"><input type="checkbox" id="mAux${i}" ${d.aux?"checked":""}></td><td><input type="number" id="mHours${i}" value="${d.hours||0}"></td><td><input id="mRem${i}" value="${d.remarks||""}"></td></tr>`;}).join('');}
+buildMonths(null);
