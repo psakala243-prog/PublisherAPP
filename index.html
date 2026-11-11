@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chipunka PublisherAPP</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9}
+header{background:#0f3d2e;color:#fff;padding:12px;text-align:center;position:sticky;top:0;z-index:10}
+.wrap{max-width:900px;margin:auto;padding:12px;padding-bottom:90px}
+.card{background:#fff;border-radius:12px;padding:12px;margin:10px 0;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+input,select,textarea{width:100%;padding:10px;margin:5px 0;border:1px solid #ddd;border-radius:8px;font-size:15px}
+button{padding:10px 14px;border:0;border-radius:8px;font-weight:700;cursor:pointer;margin:4px 2px}
+.btn-green{background:#15803d;color:#fff}.btn-blue{background:#2563eb;color:#fff}.btn-gray{background:#e5e7eb}.btn-red{background:#dc2626;color:#fff}.btn-gold{background:#ca8a04;color:#fff}
+.hidden{display:none!important}.small{font-size:12px;color:#666}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:#0f3d2e;color:#fff;border-radius:12px;padding:14px;text-align:center}.stat b{font-size:24px;display:block}
+.tabs{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;border-top:1px solid #ddd;z-index:20}
+.tabs button{flex:1;background:none;color:#333;font-size:11px;padding:8px 2px}.tabs button b{display:block;font-size:18px}
+.profilePic{width:90px;height:90px;object-fit:cover;border-radius:50%;border:3px solid #15803d}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #ddd;padding:5px;text-align:center}th{background:#0f3d2e;color:#fff}
+#dotMenu{position:fixed;top:60px;right:10px;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:50;width:220px;padding:8px}
+#dotMenu button{width:100%;text-align:left;background:#f8fafc}
+#printArea{display:none}
+@media print{body *{visibility:hidden}#printArea{display:block!important;position:absolute;top:0;left:0;width:100%}#printArea *{visibility:visible}}
+</style></head>
+<body>
+<header><h1>📖 Chipunka Congregation</h1><p>PublisherAPP • Offline + Online</p><p id="onlineBadge">🟢 Online</p></header>
+<div id="loginScreen" class="wrap"><div class="card" style="text-align:center">
+<h2>Welcome to Chipunka</h2><p class="small">SECRETARY / admin123</p>
+<input id="loginId" placeholder="Enter ID"><input id="loginPass" type="password" placeholder="Password">
+<button class="btn-green" style="width:100%" onclick="doLogin()">🔐 Login</button><p id="loginMsg" style="color:red"></p></div></div>
+<div id="appScreen" class="wrap hidden">
+<div style="display:flex;justify-content:space-between"><span id="whoLine"></span><button onclick="document.getElementById('dotMenu').classList.toggle('hidden')">⋮ Menu</button></div>
+<div id="dotMenu" class="hidden">
+<button onclick="showTab('home')">🏠 Home</button><button onclick="showTab('dashboard')">📊 Dashboard</button>
+<button onclick="showTab('report')">📞 Report</button><button onclick="showTab('s21')">📚 S-21</button>
+<button onclick="showTab('record')">➕ Record S-21</button><button onclick="showTab('cleaning')">🧹 Cleaning</button>
+<button onclick="showTab('talks')">🎤 Talks</button><button onclick="showTab('assignments')">📌 Assignments</button>
+<button onclick="showTab('notifications')">🔔 Notifications</button><button onclick="showTab('devotionals')">🙏 Devotionals</button>
+<button onclick="showTab('meetings')">📅 Meetings</button><button onclick="showTab('territory')">🗺️ Territory</button>
+<button onclick="showTab('events')">🎉 Events</button><button onclick="showTab('reminders')">⏰ Reminders</button>
+<button onclick="showTab('users')">👥 Users</button><button onclick="showTab('settings')">⚙️ Settings</button>
+<button onclick="logout()" style="background:#fee2e2">🚪 Logout</button></div>
+<div id="cleanNotifyBanner" class="card hidden" style="background:#fef9c3"></div>
+<div id="reminderBanner" class="card hidden" style="background:#dbeafe"></div><div id="tab-home"><div class="card"><h2 id="greetingBox">Welcome!</h2><p id="whoLine2"></p><p>📖 <b>Verse:</b> <span>Your word is a lamp to my foot. - Ps 119:105</span></p></div>
+<div class="grid"><div class="stat"><b id="statPubs">0</b>Publishers</div><div class="stat"><b id="statHours">0</b>Total Hours</div><div class="stat"><b id="statStudies">0</b>Studies</div><div class="stat"><b id="statReported">0</b>Reported</div></div>
+<div class="card"><h3>⚡ Quick Actions</h3><button class="btn-green" onclick="showTab('report')">📞 Send My Report</button><button class="btn-blue" onclick="showTab('s21')">📚 View S-21</button><button class="btn-gold" onclick="showTab('notifications')">🔔 Notifications</button></div>
+<div class="card"><h3>📣 Announcements</h3><div id="homeNotif"></div></div><div class="card"><h3>🙏 Devotional</h3><div id="homeDev"></div></div></div>
+<div id="tab-dashboard" class="hidden"><div class="card"><h2>📊 Dashboard</h2><div class="grid"><div class="stat"><b id="dPubs">0</b>Publishers</div><div class="stat"><b id="dHours">0</b>Hours</div><div class="stat"><b id="dStudies">0</b>Studies</div><div class="stat"><b id="dAux">0</b>Aux Pioneers</div></div><h3>Top Publishers</h3><div id="dashTop"></div><h3>Not Reported</h3><div id="dashNotRep"></div></div></div>
+<div id="tab-report" class="hidden"><div class="card"><h2>📞 Send My Report</h2><p class="small">Saves on phone + syncs to Secretary when online.</p>
+<label>Your Name</label><input id="dialName" placeholder="Full name"><label>Month</label><select id="dialMonth"></select>
+<label>Shared?</label><select id="dialShared"><option>Yes</option><option>No</option></select>
+<label>Hours</label><input id="dialHours" type="number" value="0"><label>Studies</label><input id="dialStudies" type="number" value="0">
+<label>Aux Pioneer?</label><select id="dialAux"><option>No</option><option>Yes</option></select><label>Remarks</label><input id="dialRemarks" placeholder="Remarks">
+<button class="btn-green" onclick="saveMyReport()">💾 SAVE + SYNC</button><button class="btn-blue" onclick="sendReportWhatsApp()">🟢 WhatsApp</button><button class="btn-gray" onclick="sendReportSMS()">💬 SMS</button><p id="reportMsg" class="small"></p></div></div><div id="tab-s21" class="hidden"><div class="card"><h2>📚 S-21 List</h2><input id="s21Search" placeholder="Search..." oninput="renderS21()"><div id="s21List"></div></div></div>
+<div id="tab-record" class="hidden"><div class="card"><h2>➕ Record New S-21</h2>
+<input id="fName" placeholder="Full Name"><input id="fId" placeholder="Publisher ID e.g PSAKALA01">
+<div class="grid"><input id="fDob" type="date"><input id="fBap" type="date"></div>
+<div class="grid"><select id="fSex"><option>Male</option><option>Female</option></select><select id="fHope"><option>Heavenly</option><option>Earthly</option></select></div>
+<div class="grid"><select id="fAppoint"><option>Publisher</option><option>Ministerial Servant</option><option>Elder</option></select><select id="fPioneer"><option>Regular Publisher</option><option>Auxiliary Pioneer</option><option>Regular Pioneer</option></select></div>
+<div class="grid"><input id="fGroup" placeholder="Group No"><input id="fYear" placeholder="Year e.g 2026"></div>
+<label>Photo</label><input type="file" accept="image/*" onchange="picChanged(event)"><img id="picPreview" class="profilePic hidden">
+<h3>Monthly Record</h3><div id="monthsBox"></div>
+<button class="btn-green" onclick="saveRecord()">💾 Save S-21 + Sync</button><button class="btn-gray" onclick="clearForm()">Clear</button></div></div><div id="tab-cleaning" class="hidden"><div class="card"><h2>🧹 Cleaning</h2><input id="cleanWeek" placeholder="Week e.g Week 1"><input id="cleanArea" placeholder="Area e.g Hall"><input id="cleanPeople" placeholder="Names comma separated"><button class="btn-green" onclick="addCleaning()">Add Cleaning</button><div id="cleanList"></div></div></div>
+<div id="tab-talks" class="hidden"><div class="card"><h2>🎤 Talks</h2><input id="talkTitle" placeholder="Talk Title"><input id="talkSpeaker" placeholder="Speaker"><input id="talkDate" type="date"><button class="btn-green" onclick="addTalk()">Add Talk</button><div id="talkList"></div></div></div>
+<div id="tab-assignments" class="hidden"><div class="card"><h2>📌 Assignments</h2><input id="assignPub" placeholder="Publisher"><input id="assignType" placeholder="Type e.g Student Talk"><input id="assignDate" type="date"><input id="assignDetail" placeholder="Detail"><button class="btn-green" onclick="addAssignment()">Add</button><div id="assignList"></div></div></div>
+<div id="tab-notifications" class="hidden"><div class="card"><h2>🔔 Notifications</h2><button class="btn-gray" onclick="markAllRead()">Mark All Read</button><button class="btn-blue" onclick="requestNotif()">Enable Notifications</button><select id="notifType"><option>Announcement</option><option>Urgent</option><option>Meeting</option><option>Cleaning</option></select><input id="notifTitle" placeholder="Title"><textarea id="notifBody" placeholder="Message"></textarea><button class="btn-green" onclick="sendAnnouncement()">Send to All</button><div id="notifList"></div></div></div>
+<div id="tab-devotionals" class="hidden"><div class="card"><h2>🙏 Devotionals</h2><input id="devTitle" placeholder="Title"><textarea id="devText" placeholder="Text"></textarea><button class="btn-green" onclick="addDevotional()">Add</button><div id="devotionList"></div></div></div><div id="tab-meetings" class="hidden"><div class="card"><h2>📅 Meetings</h2><p id="meetingsLockMsg"></p><div class="grid"><input id="midDay" placeholder="Midweek Day"><input id="midTime" placeholder="Midweek Time"><input id="endDay" placeholder="Weekend Day"><input id="endTime" placeholder="Weekend Time"></div><p class="small">Midweek Average</p><table><tr><th>Month</th><th>W1</th><th>W2</th><th>W3</th><th>W4</th><th>W5</th><th>Avg</th></tr><tbody id="attMidBody"></tbody></table><br><p class="small">Weekend</p><table><tr><th>Month</th><th>W1</th><th>W2</th><th>W3</th><th>W4</th><th>W5</th><th>Avg</th></tr><tbody id="attEndBody"></tbody></table><button id="saveMeetBtn" class="btn-green" onclick="saveMeetings()">Save Meetings</button><span id="meetSavedMsg"></span></div></div>
+<div id="tab-territory" class="hidden"><div class="card"><h2>🗺️ Territory S-13</h2><p id="terrLockMsg"></p><input id="terrYear" placeholder="Year"><div id="myTerrBox"></div><div style="overflow:auto"><table><tr><th>Terr No</th><th>Last Done</th><th>Name1</th><th>Assign</th><th>Done</th><th>Name2</th><th>Assign</th><th>Done</th><th>Name3</th><th>Assign</th><th>Done</th><th>Name4</th><th>Assign</th><th>Done</th></tr><tbody id="terrBody"></tbody></table></div><button id="addTerrBtn" class="btn-blue" onclick="addTerrRow()">+ Add Row</button><button id="saveTerrBtn" class="btn-green" onclick="saveTerritory()">Save Territory</button><button class="btn-gray" onclick="printTerritory()">🖨️ Print</button><span id="terrSavedMsg"></span></div></div>
+<div id="tab-events" class="hidden"><div class="card"><h2>🎉 Events</h2><p id="eventsLockMsg"></p><h3>Circuit Overseer</h3><div class="grid"><input id="evCOStart" type="date"><input id="evCOEnd" type="date"></div><input id="evCOVenue" placeholder="Venue"><input id="evCONotes" placeholder="Notes"><h3>Memorial</h3><div class="grid"><input id="evMemDate" type="date"><input id="evMemTime" placeholder="Time"></div><input id="evMemVenue" placeholder="Venue"><input id="evMemNotes" placeholder="Notes"><h3>Convention</h3><div class="grid"><input id="evConvStart" type="date"><input id="evConvEnd" type="date"></div><input id="evConvVenue" placeholder="Venue"><input id="evConvNotes" placeholder="Notes"><h3>Assembly</h3><div class="grid"><input id="evAsmStart" type="date"><input id="evAsmEnd" type="date"></div><input id="evAsmVenue" placeholder="Venue"><input id="evAsmNotes" placeholder="Notes"><button id="saveEventsBtn" class="btn-green" onclick="saveEvents()">Save Events</button><span id="eventsSavedMsg"></span></div></div>
+<div id="tab-reminders" class="hidden"><div class="card"><h2>⏰ Reminders</h2><input id="remDay" type="number" value="25"><input id="remTime" value="18:00"><input id="remMsg" placeholder="Message"><select id="remWho"><option value="all">All</option><option value="notReported">Not Reported Only</option></select><label><input id="remOn" type="checkbox" checked style="width:auto"> Reminder ON</label><button class="btn-green" onclick="saveReminders()">Save Reminders</button><span id="remSavedMsg"></span><h3>Not Reported</h3><div id="notReportedList"></div></div></div>
+<div id="tab-users" class="hidden"><div class="card"><h2>👥 Users</h2><input id="uId" placeholder="ID e.g PSAKALA01"><input id="uName" placeholder="Full Name"><input id="uPass" placeholder="Password"><select id="uRole"><option value="publisher">Publisher</option><option value="secretary">Secretary</option><option value="appointed">Appointed</option></select><button class="btn-green" onclick="createUser()">Create User</button><div id="usersList"></div><h3>Change Secretary Password</h3><input id="newSecPass" placeholder="New Secretary Password"><button class="btn-red" onclick="changeSecPass()">Change</button></div></div>
+<div id="tab-settings" class="hidden"><div class="card"><h2>⚙️ Settings / Backup</h2><p id="notifStatus"></p><button class="btn-blue" onclick="requestNotif()">Enable Notifications</button><button class="btn-gray" onclick="testNotif()">Test Notification</button><hr><button class="btn-green" onclick="exportBackup()">⬇️ Export Backup</button><br><input type="file" id="importFile" accept=".json" onchange="importBackup(event)"><p class="small">Firebase: publisherapp-f38af • Sync: <span id="syncStatus">Checking...</span></p><button class="btn-red" onclick="if(confirm('Clear all?')){localStorage.clear();location.reload()}">Clear Local Data</button></div></div>
+<div id="printArea"></div></div>
+<div class="tabs"><button onclick="showTab('home')"><b>🏠</b>Home</button><button onclick="showTab('report')"><b>📞</b>Report</button><button onclick="showTab('s21')"><b>📚</b>S-21</button><button onclick="showTab('field')"><b>📝</b>Field</button><button onclick="showTab('settings')"><b>⚙️</b>Settings</button></div>
