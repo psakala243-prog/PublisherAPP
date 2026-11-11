@@ -153,5 +153,33 @@ function renderFieldList(){if(!document.getElementById('fsList'))return;let mk=f
 function autoSendNow(){let mk=fsMonthKey();let uid=currentUser?currentUser.id:'';if(!uid){alert('Login first');return}let mine=fieldRecords.filter(r=>r.userId===uid&&fsMonthKey(r.date)===mk);if(!mine.length){alert('No records this month');return}let totH=mine.reduce((a,b)=>a+b.hours,0);let totSt=mine.reduce((a,b)=>a+b.studies,0);let svcIdx=(new Date().getMonth()+3)%12;let idx=publishers.findIndex(p=>p.id===uid||p.name===(currentUser?currentUser.name:''));if(idx<0){publishers.push({name:currentUser.name,id:uid,months:MONTHS.map(()=>({shared:false,studies:0,aux:false,hours:0,remarks:""})),totalHours:0,totalStudies:0,pic:""});idx=publishers.length-1}let p=publishers[idx];if(!p.months)p.months=MONTHS.map(()=>({shared:false,studies:0,aux:false,hours:0,remarks:""}));let old=p.months[svcIdx]||{shared:false,studies:0,aux:false,hours:0,remarks:""};p.months[svcIdx]={shared:totH>0||totSt>0,studies:totSt,aux:old.aux||false,hours:totH,remarks:old.remarks||''};p.totalHours=p.months.reduce((a,b)=>a+(b.hours||0),0);p.totalStudies=p.months.reduce((a,b)=>a+(b.studies||0),0);fieldSent[mk+'_'+uid]=true;saveFieldOnly();saveCloudFast();renderFieldList();alert('✅ Sent to S-21: '+totH+' hrs, '+totSt+' studies ONLY');}
 function checkAutoSend(){let today=new Date();if(today.getDate()===30){let mk=fsMonthKey();let uid=currentUser?currentUser.id:'';if(uid&&!fieldSent[mk+'_'+uid]&&fieldRecords.some(r=>r.userId===uid&&fsMonthKey(r.date)===mk)){autoSendNow();}}}
 </script>
-</body>
+<script>
+function viewPublisher(i){
+let p=publishers[i];
+let pa=document.getElementById('printArea');
+let chk=(v)=>v?'☑':'☐';
+let is=(a,b)=>a===b?'☑':'☐';
+pa.innerHTML=`
+<div style="font-family:Arial;padding:10px;color:#000;background:#fff">
+<h2 style="text-align:center;margin:5px">CONGREGATION'S PUBLISHER RECORD</h2>
+<p style="margin:2px"><b>Name:</b> ${p.name||''}</p>
+<p style="margin:2px"><b>Date of birth:</b> ${p.dob||''} &nbsp;&nbsp;&nbsp; ${chk(p.sex==='Male')} Male &nbsp;&nbsp; ${chk(p.sex==='Female')} Female</p>
+<p style="margin:2px"><b>Date of baptism:</b> ${p.bap||''} &nbsp;&nbsp;&nbsp; ${chk(p.hope==='Earthly')} Other sheep &nbsp;&nbsp; ${chk(p.hope==='Heavenly')} Anointed</p>
+<p style="margin:2px">${chk(p.appoint==='Elder')} Elder &nbsp; ${chk(p.appoint==='Ministerial Servant')} Ministerial servant &nbsp; ${chk(p.pioneer==='Regular Pioneer')} Regular pioneer &nbsp; ${chk(p.pioneer==='Special Pioneer')} Special pioneer &nbsp; ${chk(p.pioneer==='Field Missionary')} Field missionary</p>
+<table border="1" style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px">
+<tr><th>Service Year</th><th>Shared in Ministry</th><th>Bible Studies</th><th>Auxiliary Pioneer</th><th>Hours<br><small>(If pioneer or field missionary)</small></th><th>Remarks</th></tr>
+${MONTHS.map((m,mi)=>{
+let d=p.months&&p.months[mi]?p.months[mi]:{};
+return `<tr><td>${m}</td><td style="text-align:center">${d.shared?'☑':'☐'}</td><td style="text-align:center">${d.studies||''}</td><td style="text-align:center">${d.aux?'☑':'☐'}</td><td style="text-align:center">${d.hours||''}</td><td>${d.remarks||''}</td></tr>`
+}).join('')}
+<tr><td colspan="4" style="text-align:right"><b>Total</b></td><td style="text-align:center"><b>${p.totalHours||0}</b></td><td></td></tr>
+</table>
+<p class="small">Group: ${p.group||''} | Year: ${p.year||'2026'} | ID: ${p.id||''}</p>
+</div>`;
+pa.style.display='block';
+window.print();
+setTimeout(()=>pa.style.display='none',800);
+}
+function viewPublisherFull(){}
+</script></body>
 </html>
