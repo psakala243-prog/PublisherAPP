@@ -501,6 +501,27 @@ window.delRecord=function(id){if(!isLeader()){alert('Only Secretary + Appointed 
 window.renderS21=function(){let list=document.getElementById('s21List'); if(!list) return; let q=(document.getElementById('s21Search')?document.getElementById('s21Search').value||'':'').toLowerCase(); let filtered=publishers.filter(p=>p.name.toLowerCase().includes(q)); if(!filtered.length){list.innerHTML='<p class="small">No S-21s yet. Add one in Record.</p>'; return;} list.innerHTML=filtered.map(p=>{let pic=p.pic?`<img src="${p.pic}" class="profilePic" style="width:50px;height:50px">`:''; return `<div class="card pubCard" onmousedown="startPress('${p.id}')" onmouseup="endPress()" ontouchstart="startPress('${p.id}')" ontouchend="endPress()" oncontextmenu="return false"><div style="display:flex;gap:10px;align-items:center">${pic}<div><b>${p.name}</b><br><span class="small">${p.pioneer||'Publisher'} | ${p.group||''} | ${p.appoint||''}<br>Hours: ${p.totalHours||0} | Studies: ${p.totalStudies||0}</span></div></div><div id="act-${p.id}" class="pubActions"><button class="btn-blue" onclick="loadToForm('${p.id}')">👁️ View</button><button class="btn-green" onclick="printOne('${p.id}')">🖨️ Print</button>${isLeader()?`<button class="btn-red" onclick="delRecord('${p.id}')">🗑️ Delete</button>`:''}</div></div>`;}).join('');};
 window.printOne=function(id){let p=publishers.find(x=>x.id===id); if(!p){alert('Save record first'); return;} let pa=document.getElementById('printArea'); let rows=MONTHS.map((m,i)=>{let d=p.months&&p.months[i]?p.months[i]:{}; return `<tr><td>${m}</td><td>${d.shared?'✓':''}</td><td>${d.studies||''}</td><td>${d.aux?'✓':''}</td><td>${d.hours||''}</td><td>${d.remarks||''}</td></tr>`;}).join(''); pa.innerHTML=`<h2>CHIPUNKA CONGREGATION - CONGREGATION'S PUBLISHER RECORD (S-21)</h2><p><b>Name:</b> ${p.name} | <b>ID:</b> ${p.id} | <b>DOB:</b> ${p.dob||''} | <b>Baptism:</b> ${p.bap||''} | <b>Sex:</b> ${p.sex||''} | <b>Hope:</b> ${p.hope||''} | <b>Appointment:</b> ${p.appoint||''} | <b>Pioneer:</b> ${p.pioneer||''} | <b>Group:</b> ${p.group||''} | <b>Year:</b> ${p.year||''}</p><table><tr><th>Month</th><th>Shared</th><th>Studies</th><th>Aux Pio.</th><th>Hours</th><th>Remarks</th></tr>${rows}<tr><td><b>Total</b></td><td></td><td><b>${p.totalStudies||0}</b></td><td></td><td><b>${p.totalHours||0}</b></td><td></td></tr></table>`; pa.style.display='block'; window.print(); setTimeout(()=>{pa.style.display='none';},800);};
 loadData();
+</script><script>
+// FIX: Auto-Send ONLY Hours + Studies to S-21
+window.autoSendNow=function(){
+let mk=fsMonthKey();let uid=currentUser?currentUser.id:'';
+if(!uid){alert('Login first');return}
+let mine=fieldRecords.filter(r=>r.userId===uid&&fsMonthKey(r.date)===mk);
+if(!mine.length){alert('No records this month');return}
+let totH=mine.reduce((a,b)=>a+b.hours,0);
+let totSt=mine.reduce((a,b)=>a+b.studies,0);
+let svcIdx=(new Date().getMonth()+3)%12;
+let idx=publishers.findIndex(p=>p.id===uid||p.name===(currentUser?currentUser.name:''));
+if(idx<0){publishers.push({name:currentUser.name,id:uid,months:MONTHS.map(()=>({shared:false,studies:0,aux:false,hours:0,remarks:""})),totalHours:0,totalStudies:0,pic:""});idx=publishers.length-1}
+let p=publishers[idx];
+if(!p.months)p.months=MONTHS.map(()=>({shared:false,studies:0,aux:false,hours:0,remarks:""}));
+let old=p.months[svcIdx]||{shared:false,studies:0,aux:false,hours:0,remarks:""};
+p.months[svcIdx]={shared:totH>0||totSt>0,studies:totSt,aux:old.aux||false,hours:totH,remarks:old.remarks||''};
+p.totalHours=p.months.reduce((a,b)=>a+(b.hours||0),0);
+p.totalStudies=p.months.reduce((a,b)=>a+(b.studies||0),0);
+fieldSent[mk+'_'+uid]=true;saveFieldOnly();saveCloudFast();renderFieldList();
+alert('✅ Sent to S-21: '+totH+' hrs, '+totSt+' studies ONLY');
+};
 </script>
 </body>
 </html>
