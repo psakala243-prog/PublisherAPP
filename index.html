@@ -429,5 +429,94 @@ saveCloudFast();
 alert('✅ Saved - DOB: '+showDate(dob)+' | Baptism: '+showDate(bap));
 clearForm();renderS21();showTab('s21');
 }
+</script><script>
+// === 1. PRIVACY - Publishers see ONLY their own S-21 ===
+function renderS21(){
+let q=(document.getElementById('s21Search').value||'').toLowerCase();
+let l=document.getElementById('s21List');if(!l)return;
+let list=publishers;
+if(!isLeader() && currentUser){
+  // Publisher: only own record
+  list=publishers.filter(p=>p.id===currentUser.id || p.name.toLowerCase()===currentUser.name.toLowerCase());
+  // If he has no record yet, show message
+  if(!list.length){l.innerHTML='<div class="card">Your S-21 is not created yet.<br>Ask the Secretary to create it.<br><br>Your Name: <b>'+currentUser.name+'</b><br>Your ID: <b>'+currentUser.id+'</b></div>';return;}
+}
+let f=list.filter(p=>p.name.toLowerCase().includes(q));
+l.innerHTML=f.map(p=>{let idx=publishers.indexOf(p);
+  // Publisher: only View + Print his own, NO Edit, NO Delete
+  // Leader: View + Edit + Print + Delete
+  if(isLeader()){
+    return `<div class="card"><b>${p.name}</b><br><span class="small">ID: ${p.id} | ${p.appoint} | Hours: ${p.totalHours||0} | DOB: ${getDob(p)||'—'} | Baptism: ${getBap(p)||'—'}</span><br><button class="btn-blue" onclick="viewPublisher(${idx})">👁️ View</button><button class="btn-green" onclick="editPublisher(${idx})">✏️ Edit</button><button class="btn-gray" onclick="printPublisher(${idx})">🖨️ Print</button><button class="btn-red" onclick="if(confirm('Delete?')){publishers.splice(${idx},1);saveCloudFast();renderS21()}">Delete</button></div>`;
+  }else{
+    return `<div class="card"><b>My S-21 - ${p.name}</b><br><span class="small">ID: ${p.id} | DOB: ${getDob(p)||'—'} | Baptism: ${getBap(p)||'—'}</span><br><button class="btn-blue" onclick="viewPublisher(${idx})">👁️ View My S-21</button><button class="btn-gray" onclick="printPublisher(${idx})">🖨️ Print My S-21</button></div>`;
+  }
+}).join('')||'No publishers';
+}
+
+// === 2. PRIVACY - Block Publisher from opening other people's S-21 by trick ===
+function viewPublisher(i){
+let p=publishers[i];
+if(!isLeader() && currentUser && p.id!==currentUser.id && p.name.toLowerCase()!==currentUser.name.toLowerCase()){
+  alert('🔒 You can only view your own S-21');
+  return;
+}
+let pa=document.getElementById('printArea');
+pa.innerHTML=`
+<div style="font-family:Arial;padding:12px;background:#fff;color:#000">
+<h2 style="text-align:center">CONGREGATION'S PUBLISHER RECORD</h2>
+<p><b>Name:</b> ${p.name||''}</p>
+<div style="border:1px solid #000;padding:8px;margin:6px 0;background:#fef9c3">
+<b>Date of birth:</b> ${showDate(getDob(p))} &nbsp;&nbsp; ${p.sex==='Male'?'☑ Male ☐ Female':'☐ Male ☑ Female'}<br>
+<b>Date of baptism:</b> ${showDate(getBap(p))} &nbsp;&nbsp; ${hopeCheck(p,'Other sheep')} Other sheep &nbsp; ${hopeCheck(p,'Anointed')} Anointed
+</div>
+<p>${p.appoint||''} | ${p.pioneer||''} | Group: ${p.group||''}</p>
+<table border="1" style="width:100%;border-collapse:collapse;font-size:13px">
+<tr><th>Service Year</th><th>Shared</th><th>Bible Studies</th><th>Aux Pioneer</th><th>Hours</th><th>Remarks</th></tr>
+${MONTHS.map((m,mi)=>{let d=p.months&&p.months[mi]?p.months[mi]:{};return `<tr><td>${m}</td><td style="text-align:center">${d.shared?'☑':'☐'}</td><td style="text-align:center">${d.studies||''}</td><td style="text-align:center">${d.aux?'☑':'☐'}</td><td style="text-align:center">${d.hours||''}</td><td>${d.remarks||''}</td></tr>`}).join('')}
+<tr><td colspan="4" style="text-align:right"><b>Total</b></td><td style="text-align:center"><b>${p.totalHours||0}</b></td><td></td></tr>
+</table>
+<br>${isLeader()?`<button class="btn-green" onclick="editPublisher(${i})">✏️ Edit This Record</button>`:''}
+<button class="btn-blue" onclick="printPublisher(${i})">🖨️ Print</button>
+<button class="btn-gray" onclick="document.getElementById('printArea').style.display='none';showTab('s21')">⬅ Back</button>
+</div>`;
+pa.style.display='block';
+window.scrollTo(0,0);
+}
+
+function printPublisher(i){
+let p=publishers[i];
+if(!isLeader() && currentUser && p.id!==currentUser.id && p.name.toLowerCase()!==currentUser.name.toLowerCase()){alert('🔒 You can only print your own S-21');return;}
+let pa=document.getElementById('printArea');
+pa.innerHTML=`<div style="font-family:Arial;padding:10px;background:#fff;color:#000"><h2 style="text-align:center">CONGREGATION'S PUBLISHER RECORD</h2><p><b>Name:</b> ${p.name||''}</p><p><b>Date of birth:</b> ${showDate(getDob(p))} &nbsp; ${p.sex==='Male'?'☑ Male':'☐ Male'} ${p.sex==='Female'?'☑ Female':'☐ Female'}</p><p><b>Date of baptism:</b> ${showDate(getBap(p))} &nbsp; ${hopeCheck(p,'Other sheep')} Other sheep &nbsp; ${hopeCheck(p,'Anointed')} Anointed</p><p>${p.appoint||''} | ${p.pioneer||''}</p><table border="1" style="width:100%;border-collapse:collapse;font-size:13px"><tr><th>Service Year</th><th>Shared in Ministry</th><th>Bible Studies</th><th>Auxiliary Pioneer</th><th>Hours</th><th>Remarks</th></tr>${MONTHS.map((m,mi)=>{let d=p.months&&p.months[mi]?p.months[mi]:{};return `<tr><td>${m}</td><td style="text-align:center">${d.shared?'☑':'☐'}</td><td style="text-align:center">${d.studies||''}</td><td style="text-align:center">${d.aux?'☑':'☐'}</td><td style="text-align:center">${d.hours||''}</td><td>${d.remarks||''}</td></tr>`}).join('')}<tr><td colspan="4" style="text-align:right"><b>Total</b></td><td style="text-align:center"><b>${p.totalHours||0}</b></td><td></td></tr></table></div>`;
+pa.style.display='block';window.print();setTimeout(()=>pa.style.display='none',800);
+}
+
+// === 3. FIX DOB BOXES - Add labels so they don't look blank ===
+(function(){
+let dob=document.getElementById('fDob');
+let bap=document.getElementById('fBap');
+if(dob && !document.getElementById('dobLabel')){
+  let lab=document.createElement('div');
+  lab.id='dobLabel';
+  lab.innerHTML='<label><b>Date of Birth</b> - Tap to pick date</label><div id="dobShow" class="small" style="color:#15803d"></div>';
+  dob.parentNode.insertBefore(lab, dob);
+  let lab2=document.createElement('div');
+  lab2.innerHTML='<label><b>Date of Baptism</b> - Tap to pick date</label><div id="bapShow" class="small" style="color:#15803d"></div>';
+  bap.parentNode.insertBefore(lab2, bap);
+  dob.addEventListener('change',()=>{document.getElementById('dobShow').innerText='Saved: '+dob.value});
+  bap.addEventListener('change',()=>{document.getElementById('bapShow').innerText='Saved: '+bap.value});
+}
+})();
+
+// Fix Edit to show DOB values in labels
+let _oldEdit = editPublisher;
+function editPublisher(i){
+_oldEdit(i);
+let p=publishers[i];
+setTimeout(()=>{
+  let d=document.getElementById('dobShow'); if(d) d.innerText = getDob(p) ? 'Current saved DOB: '+getDob(p) : 'No DOB saved yet - please pick a date';
+  let b=document.getElementById('bapShow'); if(b) b.innerText = getBap(p) ? 'Current saved Baptism: '+getBap(p) : 'No Baptism saved yet - please pick a date';
+},100);
+}
 </script></body>
 </html>
