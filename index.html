@@ -148,5 +148,38 @@ function renderFieldList(){if(!document.getElementById('fsList'))return;let mk=f
 function autoSendNow(){let mk=fsMonthKey();let uid=currentUser?currentUser.id:'';if(!uid){alert('Login first');return}let mine=fieldRecords.filter(r=>r.userId===uid&&fsMonthKey(r.date)===mk);if(!mine.length){alert('No records this month');return}let totH=mine.reduce((a,b)=>a+b.hours,0);let totSt=mine.reduce((a,b)=>a+b.studies,0);let svcIdx=(new Date().getMonth()+3)%12;let idx=publishers.findIndex(p=>p.id===uid||p.name===(currentUser?currentUser.name:''));if(idx<0){publishers.push({name:currentUser.name,id:uid,months:MONTHS.map(()=>({shared:false,studies:0,aux:false,hours:0,remarks:""})),totalHours:0,totalStudies:0,pic:""});idx=publishers.length-1}let p=publishers[idx];if(!p.months)p.months=MONTHS.map(()=>({shared:false,studies:0,aux:false,hours:0,remarks:""}));let old=p.months[svcIdx]||{shared:false,studies:0,aux:false,hours:0,remarks:""};p.months[svcIdx]={shared:totH>0||totSt>0,studies:totSt,aux:old.aux||false,hours:totH,remarks:old.remarks||''};p.totalHours=p.months.reduce((a,b)=>a+(b.hours||0),0);p.totalStudies=p.months.reduce((a,b)=>a+(b.studies||0),0);fieldSent[mk+'_'+uid]=true;saveFieldOnly();saveCloudFast();renderFieldList();alert('✅ Sent to S-21: '+totH+' hrs, '+totSt+' studies ONLY');}
 function checkAutoSend(){let today=new Date();if(today.getDate()===30){let mk=fsMonthKey();let uid=currentUser?currentUser.id:'';if(uid&&!fieldSent[mk+'_'+uid]&&fieldRecords.some(r=>r.userId===uid&&fsMonthKey(r.date)===mk)){autoSendNow();}}}
 </script>
-</body>
+<script>
+// FIX 1: Hide bottom tabs until login
+try{document.querySelector('.tabs').style.display='none';}catch(e){}
+// FIX 2: Bulletproof Login - will TELL you the error instead of doing nothing
+var oldLogin = window.doLogin;
+window.doLogin = function(){
+try{
+var id=document.getElementById('loginId').value.trim().toUpperCase();
+var pass=document.getElementById('loginPass').value.trim();
+if(!id||!pass){alert('Fill ID and Password');return;}
+if(id==='SECRETARY'&&pass==='admin123'){
+currentUser={id:'SECRETARY',name:'Secretary',pass:'admin123',role:'secretary'};
+currentRole='secretary';
+}else{
+try{loadOffline();}catch(e){}
+var u=null;
+for(var i=0;i<users.length;i++){if(users[i].id===id&&users[i].pass===pass){u=users[i];break;}}
+if(!u){document.getElementById('loginMsg').innerText='❌ Wrong ID or Password';return;}
+currentUser=u;currentRole=u.role||'publisher';
+}
+document.getElementById('loginScreen').classList.add('hidden');
+document.getElementById('appScreen').classList.remove('hidden');
+try{document.querySelector('.tabs').style.display='flex';}catch(e){}
+document.getElementById('whoLine').innerHTML='Logged in as <b>'+currentUser.name+'</b>';
+document.getElementById('whoLine2').innerHTML='Logged in as <b>'+currentUser.name+'</b>';
+document.getElementById('greetingBox').innerText=getGreeting()+', '+currentUser.name+'!';
+var dn=document.getElementById('dialName');if(dn)dn.value=currentUser.name;
+try{renderList();}catch(e){alert('Login OK but render error: '+e.message);}
+try{showTab('home');}catch(e){alert('Show Home error: '+e.message);}
+}catch(err){
+alert('LOGIN ERROR FOUND: '+err.message);
+}
+};
+</script></body>
 </html>
