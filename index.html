@@ -335,5 +335,99 @@ document.getElementById('printArea').style.display='none';
 showTab('record');
 window.scrollTo(0,0);
 }
+</script><script>
+// Show DOB + Baptism clearly - even if old data used different names
+function getDob(p){return p.dob||p.dateOfBirth||p.birth||''}
+function getBap(p){return p.bap||p.baptism||p.dateOfBaptism||''}
+function showDate(v){
+if(!v)return '— Not set —';
+return v;
+}
+
+// FIX VIEW - DOB + Baptism big and clear
+function viewPublisher(i){
+let p=publishers[i];
+let pa=document.getElementById('printArea');
+pa.innerHTML=`
+<div style="font-family:Arial;padding:12px;background:#fff;color:#000">
+<h2 style="text-align:center">CONGREGATION'S PUBLISHER RECORD</h2>
+<p><b>Name:</b> ${p.name||''}</p>
+<div style="border:1px solid #000;padding:8px;margin:6px 0;background:#fef9c3">
+<b>Date of birth:</b> ${showDate(getDob(p))} &nbsp;&nbsp; ${p.sex==='Male'?'☑ Male ☐ Female':'☐ Male ☑ Female'}<br>
+<b>Date of baptism:</b> ${showDate(getBap(p))} &nbsp;&nbsp; ${hopeCheck(p,'Other sheep')} Other sheep &nbsp; ${hopeCheck(p,'Anointed')} Anointed
+</div>
+<p>${p.appoint||''} | ${p.pioneer||''} | Group: ${p.group||''} | Hope: <b>${hopeLabel(p)}</b></p>
+<table border="1" style="width:100%;border-collapse:collapse;font-size:13px">
+<tr><th>Service Year</th><th>Shared</th><th>Bible Studies</th><th>Aux Pioneer</th><th>Hours</th><th>Remarks</th></tr>
+${MONTHS.map((m,mi)=>{let d=p.months&&p.months[mi]?p.months[mi]:{};return `<tr><td>${m}</td><td style="text-align:center">${d.shared?'☑':'☐'}</td><td style="text-align:center">${d.studies||''}</td><td style="text-align:center">${d.aux?'☑':'☐'}</td><td style="text-align:center">${d.hours||''}</td><td>${d.remarks||''}</td></tr>`}).join('')}
+<tr><td colspan="4" style="text-align:right"><b>Total</b></td><td style="text-align:center"><b>${p.totalHours||0}</b></td><td></td></tr>
+</table>
+<br><button class="btn-green" onclick="editPublisher(${i})">✏️ Edit This Record</button>
+<button class="btn-blue" onclick="printPublisher(${i})">🖨️ Print</button>
+<button class="btn-gray" onclick="document.getElementById('printArea').style.display='none';showTab('s21')">⬅ Back</button>
+</div>`;
+pa.style.display='block';
+window.scrollTo(0,0);
+}
+
+// FIX PRINT - same
+function printPublisher(i){
+let p=publishers[i];
+let pa=document.getElementById('printArea');
+pa.innerHTML=`
+<div style="font-family:Arial;padding:10px;background:#fff;color:#000">
+<h2 style="text-align:center">CONGREGATION'S PUBLISHER RECORD</h2>
+<p><b>Name:</b> ${p.name||''}</p>
+<p><b>Date of birth:</b> ${showDate(getDob(p))} &nbsp; ${p.sex==='Male'?'☑ Male':'☐ Male'} ${p.sex==='Female'?'☑ Female':'☐ Female'}</p>
+<p><b>Date of baptism:</b> ${showDate(getBap(p))} &nbsp; ${hopeCheck(p,'Other sheep')} Other sheep &nbsp; ${hopeCheck(p,'Anointed')} Anointed</p>
+<p>${p.appoint||''} | ${p.pioneer||''}</p>
+<table border="1" style="width:100%;border-collapse:collapse;font-size:13px">
+<tr><th>Service Year</th><th>Shared in Ministry</th><th>Bible Studies</th><th>Auxiliary Pioneer</th><th>Hours</th><th>Remarks</th></tr>
+${MONTHS.map((m,mi)=>{let d=p.months&&p.months[mi]?p.months[mi]:{};return `<tr><td>${m}</td><td style="text-align:center">${d.shared?'☑':'☐'}</td><td style="text-align:center">${d.studies||''}</td><td style="text-align:center">${d.aux?'☑':'☐'}</td><td style="text-align:center">${d.hours||''}</td><td>${d.remarks||''}</td></tr>`}).join('')}
+<tr><td colspan="4" style="text-align:right"><b>Total</b></td><td style="text-align:center"><b>${p.totalHours||0}</b></td><td></td></tr>
+</table></div>`;
+pa.style.display='block';
+window.print();
+setTimeout(()=>pa.style.display='none',800);
+}
+
+// FIX EDIT - load DOB + Baptism properly
+function editPublisher(i){
+let p=publishers[i];
+window._editIndex=i;
+document.getElementById('fName').value=p.name||'';
+document.getElementById('fId').value=p.id||'';
+document.getElementById('fDob').value=getDob(p);
+document.getElementById('fBap').value=getBap(p);
+document.getElementById('fSex').value=p.sex||'Male';
+document.getElementById('fHope').value=hopeLabel(p);
+document.getElementById('fAppoint').value=p.appoint||'Publisher';
+document.getElementById('fPioneer').value=p.pioneer||'Regular Publisher';
+document.getElementById('fGroup').value=p.group||'';
+document.getElementById('fYear').value=p.year||'2026';
+buildMonths(p);
+document.getElementById('printArea').style.display='none';
+showTab('record');
+window.scrollTo(0,0);
+alert('Editing: '+p.name+' | DOB: '+showDate(getDob(p))+' | Baptism: '+showDate(getBap(p))+' - If blank, please type them and Save');
+}
+
+// FIX SAVE - never lose DOB / Baptism when editing
+function saveRecord(){
+let name=document.getElementById('fName').value.trim(),id=document.getElementById('fId').value.trim().toUpperCase();
+if(!name||!id){alert('Fill Name + ID');return;}
+let dob=document.getElementById('fDob').value;
+let bap=document.getElementById('fBap').value;
+let old=publishers.find(p=>p.id===id);
+if(!dob&&old)dob=getDob(old);
+if(!bap&&old)bap=getBap(old);
+let months=MONTHS.map((m,i)=>({shared:document.getElementById('mShared'+i).checked,studies:+document.getElementById('mStud'+i).value||0,aux:document.getElementById('mAux'+i).checked,hours:+document.getElementById('mHours'+i).value||0,remarks:document.getElementById('mRem'+i).value}));
+let rec={name:name,id:id,dob:dob,bap:bap,sex:document.getElementById('fSex').value,hope:document.getElementById('fHope').value,appoint:document.getElementById('fAppoint').value,pioneer:document.getElementById('fPioneer').value,group:document.getElementById('fGroup').value,year:document.getElementById('fYear').value,months:months,totalHours:months.reduce((a,b)=>a+b.hours,0),totalStudies:months.reduce((a,b)=>a+b.studies,0),pic:currentPic||(old?old.pic:'')};
+let ex=publishers.findIndex(p=>p.id===id);
+if(ex>=0)publishers[ex]=rec;else publishers.push(rec);
+saveCloudFast();
+alert('✅ Saved - DOB: '+showDate(dob)+' | Baptism: '+showDate(bap));
+clearForm();renderS21();showTab('s21');
+}
 </script></body>
 </html>
