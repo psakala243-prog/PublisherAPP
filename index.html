@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Chipunka PublisherAPP</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -599,5 +599,59 @@ function savePublisher(){
 // Helper: make getDob / getBap check all possible names
 function getDob(p){ return p.dob||p.DOB||p.dateOfBirth||p.birth||p.dobDate||''; }
 function getBap(p){ return p.bap||p.BAP||p.baptism||p.dateOfBaptism||p.bapDate||''; }
+</script><style>
+/* === ROTATION FIX - Allow Portrait + Landscape === */
+html, body{
+  width:100%;
+  overflow-x:hidden;
+}
+#app, .container, .main, #s21List{
+  width:100% !important;
+  max-width:100% !important;
+  box-sizing:border-box;
+}
+/* When phone is turned sideways - make table fit */
+@media (orientation: landscape) and (max-height: 500px){
+  body{ font-size:14px; }
+  .card{ padding:8px; margin:6px 0; }
+  /* S-21 table scrolls sideways instead of cutting off */
+  table{
+    display:block;
+    overflow-x:auto;
+    white-space:nowrap;
+    width:100% !important;
+  }
+  /* Make buttons smaller so they fit in landscape */
+  button{
+    padding:8px 10px !important;
+    font-size:14px !important;
+  }
+  /* Hide big header in landscape to save space */
+  h1{ font-size:20px !important; margin:5px 0 !important; }
+}
+/* When phone is upright - normal view */
+@media (orientation: portrait){
+  table{
+    display:block;
+    overflow-x:auto;
+    width:100% !important;
+  }
+}
+</style>
+
+<script>
+// === ROTATION FIX - Re-draw list when phone rotates ===
+window.addEventListener('orientationchange', function(){
+  setTimeout(()=>{
+    if(typeof renderS21 === 'function') renderS21();
+    // Force browser to recalculate layout
+    document.body.style.display='none';
+    document.body.offsetHeight;
+    document.body.style.display='';
+  }, 300);
+});
+window.addEventListener('resize', function(){
+  if(typeof renderS21 === 'function') renderS21();
+});
 </script></body>
 </html>
