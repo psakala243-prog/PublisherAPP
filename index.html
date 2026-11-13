@@ -518,5 +518,86 @@ setTimeout(()=>{
   let b=document.getElementById('bapShow'); if(b) b.innerText = getBap(p) ? 'Current saved Baptism: '+getBap(p) : 'No Baptism saved yet - please pick a date';
 },100);
 }
+</script><script>
+// === FIX: Make EDIT actually SAVE to cloud for Secretary to see ===
+let _editIndex = -1;
+let _origEditPublisher2 = editPublisher;
+function editPublisher(i){
+  _editIndex = i;
+  _origEditPublisher2(i);
+  // Fill the form with current values so you don't lose them
+  setTimeout(()=>{
+    let p = publishers[i];
+    if(!p) return;
+    let fDob = document.getElementById('fDob');
+    let fBap = document.getElementById('fBap');
+    if(fDob) fDob.value = getDob(p) || '';
+    if(fBap) fBap.value = getBap(p) || '';
+    // Show what is currently saved
+    let d = document.getElementById('dobShow'); if(d) d.innerText = 'Current: ' + (getDob(p)||'none');
+    let b = document.getElementById('bapShow'); if(b) b.innerText = 'Current: ' + (getBap(p)||'none');
+  },150);
+}
+
+// Override Save - this is the main fix
+function savePublisher(){
+  if(_editIndex < 0){
+    alert('No publisher selected. Tap Edit first.');
+    return;
+  }
+  let p = publishers[_editIndex];
+  if(!p) return;
+
+  // 1. Read ALL fields from the form
+  let getVal = (id)=>{ let el=document.getElementById(id); return el?el.value.trim():''; };
+  let getChk = (id)=>{ let el=document.getElementById(id); return el?el.checked:false; };
+
+  // Name and basic info - keep old value if field is empty
+  if(getVal('fName')) p.name = getVal('fName');
+  if(getVal('fId')) p.id = getVal('fId');
+  if(getVal('fAppoint')) p.appoint = getVal('fAppoint');
+  if(getVal('fPioneer')) p.pioneer = getVal('fPioneer');
+  if(getVal('fGroup')) p.group = getVal('fGroup');
+  if(getVal('fSex')) p.sex = getVal('fSex');
+  if(getVal('fHope')) p.hope = getVal('fHope');
+
+  // 2. DOB + Baptism - THE FIX - save in 2 places so old code finds it
+  let dob = getVal('fDob');
+  let bap = getVal('fBap');
+  if(dob){
+    p.dob = dob;
+    p.DOB = dob;
+    p.dateOfBirth = dob;
+    p.birth = dob;
+  }
+  if(bap){
+    p.bap = bap;
+    p.BAP = bap;
+    p.baptism = bap;
+    p.dateOfBaptism = bap;
+  }
+
+  // 3. Save to cloud + local
+  try{ localStorage.setItem('publishers', JSON.stringify(publishers)); }catch(e){}
+  if(typeof saveCloudFast === 'function'){
+    saveCloudFast();
+  } else if(typeof saveCloud === 'function'){
+    saveCloud();
+  }
+
+  // 4. Show confirmation + refresh list
+  alert('✅ SAVED! Secretary will now see the new info.\nName: '+p.name+'\nDOB: '+(getDob(p)||'none')+'\nBaptism: '+(getBap(p)||'none'));
+  
+  // Close form if there is a close function
+  if(typeof closeForm === 'function') closeForm();
+  let pa = document.getElementById('printArea'); if(pa) pa.style.display='none';
+  
+  renderS21();
+  _editIndex = -1;
+}
+
+// Helper: make getDob / getBap check all possible names
+function getDob(p){ return p.dob||p.DOB||p.dateOfBirth||p.birth||p.dobDate||''; }
+function getBap(p){ return p.bap||p.BAP||p.baptism||p.dateOfBaptism||p.bapDate||''; }
 </script></body>
 </html>
