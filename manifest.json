@@ -4,7 +4,7 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any"
   "background_color": "#1e4fa3",
   "theme_color": "#1e4fa3",
   "description": "Chipunka Congregation S-21 Publisher Record - For Secretary and Appointed Brothers",
