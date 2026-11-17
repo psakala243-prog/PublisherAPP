@@ -2,7 +2,7 @@
   "name": "Chipunka PublisherAPP",
   "short_name": "PublisherAPP",
   "description": "Chipunka PublisherAPP - Manage publishers, reports and assignments easily.",
-  "start_url": ".",
+  "start_url": "./index.html",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#f1f5f9",
