@@ -668,33 +668,63 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 });
 </script><style>
-  /* MAKE MENU SCROLLABLE */
-  .sidebar, .drawer, .menu, #menu, #sidebar, #drawer,
-  .side-menu, .nav-drawer {
+  /* --- REAL SCROLL FIX --- */
+  html, body {
     overflow-y: auto !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-    padding-bottom: 120px !important;
+    height: auto !important;
+    overscroll-behavior: auto !important;
+  }
+
+  /* This targets your white menu - no matter what it's called */
+  [class*="menu"], [class*="drawer"], [class*="sidebar"], 
+  [class*="sidenav"], [id*="menu"], [id*="drawer"], [id*="sidebar"] {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior: contain !important;
+    padding-bottom: 150px !important;
+    z-index: 9999 !important;
+  }
+
+  /* The list inside the menu must also be allowed to scroll */
+  [class*="menu"] *, [class*="drawer"] *, [class*="sidebar"] * {
+    max-height: none !important;
+    overflow: visible !important;
   }
 </style>
 
 <script>
-  // Auto-fix: find the menu and make it scroll
-  document.addEventListener('DOMContentLoaded', function(){
-    // Find the element that has "Reminders" inside it = your menu
-    var all = document.querySelectorAll('div');
+  // Force scroll when menu opens
+  function fixMenuScroll(){
+    // Find menu by its content
+    var all = document.querySelectorAll('div, nav, aside');
     for(var i=0; i<all.length; i++){
-      if(all[i].textContent.includes('Reminders') && all[i].textContent.includes('Dashboard')){
+      var t = all[i].innerText || '';
+      if(t.includes('Reminders') && t.includes('Dashboard') && t.includes('Home')){
         var menu = all[i];
-        menu.style.overflowY = 'auto';
-        menu.style.height = '100vh';
-        menu.style.maxHeight = '100vh';
-        menu.style.paddingBottom = '120px';
-        menu.style.touchAction = 'pan-y';
-        break;
+        // Only fix the SMALLEST container that has all items
+        if(menu.scrollHeight > window.innerHeight){
+          menu.style.overflowY = 'auto';
+          menu.style.height = '100dvh';
+          menu.style.maxHeight = '100dvh';
+          menu.style.webkitOverflowScrolling = 'touch';
+          menu.style.touchAction = 'pan-y';
+          menu.style.paddingBottom = '150px';
+          console.log('Menu fixed:', menu);
+          break;
+        }
       }
     }
-  });
+  }
+  // Run it every time you tap the menu button
+  document.addEventListener('click', function(){ setTimeout(fixMenuScroll, 100); });
+  document.addEventListener('DOMContentLoaded', fixMenuScroll);
 </script></body>
 </html>
