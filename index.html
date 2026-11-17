@@ -659,7 +659,7 @@ window.addEventListener('resize', function(){
 document.addEventListener('DOMContentLoaded', function(){
   document.querySelectorAll('header p').forEach(function(p){
     if(p.textContent.includes('Offline')){
-      p.textContent = 'PublisherAPP';
+      p.style.display='none'
     }
   });
   // FIX 2: Register Service Worker
