@@ -667,5 +667,34 @@ document.addEventListener('DOMContentLoaded', function(){
     navigator.serviceWorker.register('./sw.js').catch(function(){});
   }
 });
+</script><style>
+  /* MAKE MENU SCROLLABLE */
+  .sidebar, .drawer, .menu, #menu, #sidebar, #drawer,
+  .side-menu, .nav-drawer {
+    overflow-y: auto !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    padding-bottom: 120px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+</style>
+
+<script>
+  // Auto-fix: find the menu and make it scroll
+  document.addEventListener('DOMContentLoaded', function(){
+    // Find the element that has "Reminders" inside it = your menu
+    var all = document.querySelectorAll('div');
+    for(var i=0; i<all.length; i++){
+      if(all[i].textContent.includes('Reminders') && all[i].textContent.includes('Dashboard')){
+        var menu = all[i];
+        menu.style.overflowY = 'auto';
+        menu.style.height = '100vh';
+        menu.style.maxHeight = '100vh';
+        menu.style.paddingBottom = '120px';
+        menu.style.touchAction = 'pan-y';
+        break;
+      }
+    }
+  });
 </script></body>
 </html>
