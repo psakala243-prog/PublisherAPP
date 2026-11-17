@@ -654,5 +654,18 @@ window.addEventListener('orientationchange', function(){
 window.addEventListener('resize', function(){
   if(typeof renderS21 === 'function') renderS21();
 });
+</script><script>
+// FIX 1: Remove Offline + Online text
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('header p').forEach(function(p){
+    if(p.textContent.includes('Offline')){
+      p.textContent = 'PublisherAPP';
+    }
+  });
+  // FIX 2: Register Service Worker
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
+  }
+});
 </script></body>
 </html>
