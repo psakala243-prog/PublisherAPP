@@ -1,0 +1,1 @@
+[{      "relation": ["delegate_permission/common.handle_all_urls"],      "target": {        "namespace": "android_app",        "package_name": "io.github.psakala243_prog.twa",        "sha256_cert_fingerprints": ["9F:60:74:4E:E7:D4:18:2F:18:26:81:45:DD:B0:7A:02:81:D2:0C:C2:D3:93:54:DF:C9:5E:07:81:B7:67:0C:77"]      }    }]
