@@ -31,7 +31,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid 
 <button class="btn-green" style="width:100%" onclick="doLogin()">🔐 Login</button><p id="loginMsg" style="color:red"></p></div></div>
 <div id="appScreen" class="wrap hidden">
 <div style="display:flex;justify-content:space-between"><span id="whoLine"></span><button onclick="document.getElementById('dotMenu').classList.toggle('hidden')">⋮ Menu</button></div>
-<div id="dotMenu" class="hidden">
+<div id="dotMenu" class="hidden" style="position:fixed; top:60px; right:8px; bottom:10px; width:78%; max-width:320px; height:auto; max-height:calc(100dvh - 70px); overflow-y:auto !important; overflow-x:hidden; background:white; z-index:9999; padding:12px 12px 40px 12px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.3); -webkit-overflow-scrolling:touch; touch-action:pan-y; display:flex; flex-direction:column; gap:4px;">
 <button onclick="showTab('home')">🏠 Home</button><button onclick="showTab('dashboard')">📊 Dashboard</button>
 <button onclick="showTab('report')">📞 Report</button><button onclick="showTab('s21')">📚 S-21</button>
 <button onclick="showTab('record')">➕ Record S-21</button><button onclick="showTab('cleaning')">🧹 Cleaning</button>
