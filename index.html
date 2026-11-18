@@ -806,6 +806,44 @@ function lockPublisherView(){
   }catch(e){}
 }
 setInterval(lockPublisherView, 1000);
+</script><script>
+function lockPublisherView2(){
+  try{
+    // Only run AFTER login - if not logged in, do nothing
+    if(!currentRole) return;
+    if(currentRole==='secretary') return; // Secretary: do NOTHING, keep editing
+    if(currentRole!=='publisher') return;
+
+    // Publisher only - hide create boxes, don't delete them
+    ['notifTitle','notifBody','notifType','devTitle','devText'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el && el.parentElement) el.parentElement.style.display='none';
+    });
+    var btns=document.querySelectorAll('button');
+    for(var i=0;i<btns.length;i++){
+      var oc=btns[i].getAttribute('onclick')||'';
+      if(oc.includes('sendAnnouncement') || oc.includes('addDevotional') || oc.includes('saveMeetings') || oc.includes('saveMeeting')){
+        btns[i].style.display='none';
+      }
+    }
+    // Meetings: make inputs READ-ONLY, don't replace them
+    var inputs=document.querySelectorAll('input');
+    for(var k=0;k<inputs.length;k++){
+      var id=(inputs[k].id||'').toLowerCase();
+      if(id.includes('meet') || id.includes('wed') || id.includes('sun') || id.includes('meeting')){
+        inputs[k].readOnly=true; inputs[k].disabled=true;
+        inputs[k].style.background='#f1f5f9'; inputs[k].style.border='none';
+      }
+    }
+    var all=document.querySelectorAll('p,div,span');
+    for(var m=0;m<all.length;m++){
+      if(all[m].textContent.trim()==='You can edit.'){
+        all[m].textContent='Meeting Times - set by Secretary';
+      }
+    }
+  }catch(e){}
+}
+setInterval(lockPublisherView2, 1000);
 </script>
 </body>
 </html>
