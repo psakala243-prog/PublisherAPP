@@ -842,6 +842,33 @@ function deletePublisher(id){
     alert('Deleted');
   }catch(e){ alert(e.message); }
 }
+</script><script>
+// FIX EDIT - accepts BOTH index (0) and ID (MERRIAN)
+function editPublisher(a){
+  var p = null;
+  var idx = -1;
+  if(typeof a === "number" || !isNaN(Number(a))){
+    idx = Number(a);
+    if(publishers && publishers[idx]) p = publishers[idx];
+  }
+  if(!p && publishers){
+    for(var i=0;i<publishers.length;i++){
+      if(String(publishers[i].id||"").toUpperCase() === String(a||"").toUpperCase()){ p = publishers[i]; idx = i; break; }
+    }
+  }
+  if(!p){ alert("Not found"); return; }
+  publisher_editIndex = idx;
+  // open the S-21 form - try both possible field names
+  function set(id, val){ var e=document.getElementById(id); if(e) e.value = val||""; }
+  set("fName", p.name); set("s21Name", p.name);
+  set("fId", p.id); set("s21Id", p.id);
+  set("fDob", p.dob||p.DOB||""); set("fBap", p.baptism||p.Baptism||"");
+  set("fGroup", p.group||p.Group||"");
+  var t = document.getElementById("s21EditTitle"); if(t) t.textContent = "Editing: " + p.name;
+  var card = document.getElementById("s21EditCard"); if(card) card.style.display = "block";
+  if(typeof showTab === "function") showTab("s21");
+  if(card) card.scrollIntoView();
+}
 </script>
 </body>
 </html>
