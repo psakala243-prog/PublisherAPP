@@ -509,4 +509,66 @@ window.testNotif=function(){if(Notification.permission==="granted"){new Notifica
 window.saveReminders=function(){if(!isLeader()){alert("Only Secretary / Appointed"); return;} reminders={day:+document.getElementById('remDay').value||25,time:document.getElementById('remTime').value||"18:00",msg:document.getElementById('remMsg').value||"Please send your report.",who:document.getElementById('remWho').value,on:document.getElementById('remOn').checked}; saveCloudFast(); document.getElementById('remSavedMsg').innerText="✅ Reminder Settings Saved! Day "+reminders.day+" at "+reminders.time;};
 function checkReportReminder(){let i=getCurrentMonthIndex(); let monthName=MONTHS[i]; let banner=document.getElementById('reminderBanner'); if(!banner) return; if(!currentUser) return; let me=publishers.find(p=>p.id===currentUser.id); if(isLeader()){let notRep=getNotReported(); let html=`<b>📋 ${notRep.length} publishers have NOT reported for ${monthName} yet</b><br>`+notRep.map(p=>`• ${p.name} (${p.pioneer||'Publisher'})`).join('<br>'); let nr=document.getElementById('notReportedList'); if(nr) nr.innerHTML=html||'All have reported ✅'; if(notRep.length && reminders.on){banner.style.display='block'; banner.innerHTML=`<b>🔔 REMINDER: ${notRep.length} publishers have not sent report for ${monthName} yet.</b><br><span class="small">Remind them - Day ${reminders.day} at ${reminders.time}</span>`;} else banner.style.display='none'; return;} if(me && !hasReported(me) && reminders.on){banner.style.display='block'; banner.innerHTML=`<b>🔔 ${currentUser.name}, please send your report for ${monthName}!</b><br>${reminders.msg}<br><button class="btn-green" onclick="showTab('add')">📝 Send My Report Now</button> <button class="btn-blue" onclick="showTab('dial')">📞 Dial To Send Report - 0977399807</button>`; if(Notification.permission==="granted" && new Date().getDate()>=reminders.day){let key='chipunka_rem_'+monthName+'_'+currentUser.id; if(!localStorage.getItem(key)){localStorage.setItem(key,'1'); new Notification("📖 Chipunka - Send Your Report",{body:reminders.msg});}}} else {banner.style.display='none';} let nr2=document.getElementById('notReportedList'); if(nr2) nr2.innerHTML='<span class="small">Only Secretary can see who has not reported.</span>';}
 setInterval(()=>{checkCleaningNotify(); if(!currentUser) return; let now=new Date(); let hh=String(now.getHours()).padStart(2,'0')+":"+String(now.getMinutes()).padStart(2,'0'); if(reminders.on && now.getDate()>=reminders.day && hh===reminders.time && Notification.permission==="granted"){let key='chipunka_daily_'+now.toDateString()+'_'+currentUser.id; if(!localStorage.getItem(key)){localStorage.setItem(key,'1'); new Notification("📖 Chipunka - Send Your Report",{body:reminders.msg});}}},60000);
+</script><script>
+// === BOTTOM FIX - Hide Edit Boxes For Publishers - Paste At Bottom ===
+(function(){
+  function isPublisher(){
+    let u=document.getElementById('tabBtn-users');
+    // In your app, publishers have Users button hidden. Secretary sees it.
+    if(u && u.style.display==='none') return true;
+    let w=document.getElementById('whoLine');
+    if(w && w.innerText && w.innerText.includes('publisher')) return true;
+    return false;
+  }
+  function applyFix(){
+    let pub = isPublisher();
+    // 1. Announcements
+    let af=document.getElementById('announceForm');
+    if(!af){
+      // Find it by text if id not added yet
+      let all=document.querySelectorAll('.card');
+      all.forEach(c=>{ if(c.innerText.includes('Send Announcement')) af=c; });
+    }
+    if(af) af.style.display = pub ? 'none' : 'block';
+    // 2. Meetings - Edit Boxes
+    let eb1=document.getElementById('meetEditBox');
+    let eb2=document.getElementById('meetEditBox2');
+    if(!eb1){
+      let all=document.querySelectorAll('div');
+      all.forEach(d=>{ if(d.innerText.includes('Mid-Week Meeting') && d.querySelector('select')) eb1=d; });
+    }
+    if(!eb2){
+      let all=document.querySelectorAll('div');
+      all.forEach(d=>{ if(d.innerText.includes('Week-End Meeting') && d.querySelector('select')) eb2=d; });
+    }
+    if(eb1) eb1.style.display = pub ? 'none' : 'block';
+    if(eb2) eb2.style.display = pub ? 'none' : 'block';
+    // 3. Meetings - View Only Box for Publishers
+    let vo=document.getElementById('meetViewOnly');
+    if(pub){
+      if(!vo){
+        vo=document.createElement('div');
+        vo.id='meetViewOnly';
+        vo.className='card';
+        vo.style.cssText='background:#f0fdf4;display:block';
+        let h=document.querySelector('#tab-meetings h3');
+        if(h) h.after(vo);
+      }
+      let midD=document.getElementById('midDay')?.value||'Thursday';
+      let midT=document.getElementById('midTime')?.value||'17:30';
+      let endD=document.getElementById('endDay')?.value||'Sunday';
+      let endT=document.getElementById('endTime')?.value||'09:00';
+      vo.style.display='block';
+      vo.innerHTML='<b>📅 Meetings - Chipunka</b><br>Mid-Week: <b>'+midD+' '+midT+'</b><br>Week-End: <b>'+endD+' '+endT+'</b><br><span class="small">🔒 View only - Only Secretary + Appointed can edit</span>';
+    } else if(vo){
+      vo.style.display='none';
+    }
+    // 4. Hide Save buttons for publishers
+    let saveMeet=document.getElementById('saveMeetBtn');
+    if(saveMeet && pub) saveMeet.style.display='none';
+  }
+  // Run every 500ms so it works after login
+  setInterval(applyFix, 500);
+  document.addEventListener('click', ()=>{ setTimeout(applyFix, 300); });
+})();
 </script></body></html>
