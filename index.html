@@ -861,6 +861,58 @@ function printPublisher(a){
   var r=getPub(a); if(!r.p){alert("Not found");return;}
   var old=document.body.innerHTML; document.body.innerHTML="<div>"+s21Html(r.p,"view")+"</div>"; window.print(); document.body.innerHTML=old; location.reload();
 }
+function enterReport(idx){
+  var r=getPub(idx); if(!r.p){ alert("Not found"); return; }
+  var p=r.p; if(!p.reports) p.reports={};
+  var months=["September","October","November","December","January","February","March","April","May","June","July","August"];
+  var opts=""; for(var i=0;i<months.length;i++){ opts+="<option>"+months[i]+"</option>"; }
+  var html="<div id='repBox' style='position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:9999;overflow:auto;padding:14px;font-family:Arial'><div style='max-width:500px;margin:0 auto'>"
+  +"<div style='font-weight:bold;font-size:18px;text-align:center'>FIELD SERVICE REPORT<br><span style='font-size:14px;font-weight:normal'>"+p.name+"</span></div>"
+  +"<div style='background:#fff3cd;padding:10px;margin-top:12px;font-size:13px;border:1px solid #e6c200'>⚠️ Rule: 1 report per month. You can edit it <b>only 1 time, within 8 hours</b> of entering. After that it locks.</div>"
+  +"<label style='display:block;margin-top:14px'>Month<br><select id='repMonth' onchange='loadReportForEdit("+idx+")' style='width:100%;padding:10px'>"+opts+"</select></label>"
+  +"<label style='display:block;margin-top:10px'><input type='checkbox' id='repShared'> Shared in Ministry</label>"
+  +"<label style='display:block;margin-top:10px'>Bible Studies<br><input id='repStudies' type='number' value='0' style='width:100%;padding:10px'></label>"
+  +"<label style='display:block;margin-top:10px'><input type='checkbox' id='repAux'> Auxiliary Pioneer</label>"
+  +"<label style='display:block;margin-top:10px'>Hours (if pioneer)<br><input id='repHours' type='number' value='0' style='width:100%;padding:10px'></label>"
+  +"<label style='display:block;margin-top:10px'>Remarks<br><input id='repRemarks' style='width:100%;padding:10px'></label>"
+  +"<div id='repLockMsg' style='color:red;font-size:13px;margin-top:10px'></div>"
+  +"<div style='text-align:center;margin-top:16px'><button onclick=\"document.getElementById('repBox').remove()\" style='padding:10px 22px;margin-right:8px'>Cancel</button><button id='repSaveBtn' onclick=\"saveReport("+idx+")\" style='padding:10px 22px;background:#1a73e8;color:#fff;border:none'>Save Report</button></div></div></div>";
+  document.body.insertAdjacentHTML("beforeend",html);
+  loadReportForEdit(idx);
+}
+function loadReportForEdit(idx){
+  var p=publishers[idx]; if(!p.reports) p.reports={};
+  var m=document.getElementById("repMonth").value;
+  var rep=p.reports[m]; var msg=document.getElementById("repLockMsg"); var btn=document.getElementById("repSaveBtn");
+  if(!rep){ msg.innerHTML=""; btn.disabled=false; btn.style.opacity="1"; return; }
+  // Fill old values
+  document.getElementById("repShared").checked=rep.shared; document.getElementById("repStudies").value=rep.studies;
+  document.getElementById("repAux").checked=rep.aux; document.getElementById("repHours").value=rep.hours; document.getElementById("repRemarks").value=rep.remarks;
+  var hoursPassed=(Date.now()-(rep.createdAt||Date.now()))/1000/60/60;
+  var edited=rep.editedCount||0;
+  if(edited>=1){ msg.innerHTML="⛔ Locked: You already edited this report 1 time. Ask Secretary to change it."; btn.disabled=true; btn.style.opacity="0.5"; }
+  else if(hoursPassed>8){ msg.innerHTML="⛔ Locked: 8 hours passed since you entered this report ("+hoursPassed.toFixed(1)+" hrs ago). Ask Secretary."; btn.disabled=true; btn.style.opacity="0.5"; }
+  else { msg.innerHTML="✏️ You can still edit 1 time. Time left: "+(8-hoursPassed).toFixed(1)+" hours."; btn.disabled=false; btn.style.opacity="1"; }
+}
+function saveReport(idx){
+  var p=publishers[idx]; if(!p.reports) p.reports={};
+  var m=document.getElementById("repMonth").value;
+  var now=Date.now(); var old=p.reports[m];
+  if(old){
+    var hoursPassed=(now-(old.createdAt||now))/1000/60/60;
+    if((old.editedCount||0)>=1){ alert("Locked: Already edited 1 time this month."); return; }
+    if(hoursPassed>8){ alert("Locked: 8 hours passed. Ask Secretary."); return; }
+    // This is the 1 allowed edit
+    p.reports[m]={shared:document.getElementById("repShared").checked, studies:document.getElementById("repStudies").value, aux:document.getElementById("repAux").checked, hours:document.getElementById("repHours").value, remarks:document.getElementById("repRemarks").value, createdAt:old.createdAt, editedCount:1, lastEditAt:now};
+    alert("Edited 1 time. Now locked for "+m);
+  } else {
+    // First time entering
+    p.reports[m]={shared:document.getElementById("repShared").checked, studies:document.getElementById("repStudies").value, aux:document.getElementById("repAux").checked, hours:document.getElementById("repHours").value, remarks:document.getElementById("repRemarks").value, createdAt:now, editedCount:0};
+    alert("Report saved for "+m+". You have 8 hours to edit it 1 time.");
+  }
+  try{ localStorage.setItem("publishers",JSON.stringify(publishers)); }catch(e){}
+  document.getElementById("repBox").remove(); viewPublisher(idx);
+}
 </script>
 </body>
 </html>
