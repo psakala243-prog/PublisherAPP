@@ -821,7 +821,7 @@ function editPublisher(a){
   if(typeof showTab==="function") showTab("s21");
   if(card) card.scrollIntoView();
 }
-function s21Html(p, mode){
+  function s21Html(p, mode){
   var months=["September","October","November","December","January","February","March","April","May","June","July","August"];
   var isMale=(p.gender==="Male"||p.sex==="Male")?"☑":"☐"; var isFemale=(p.gender==="Female"||p.sex==="Female")?"☑":"☐";
   var isOther="☐", isAnointed="☐"; if(p.hope==="Anointed") isAnointed="☑"; else isOther="☑";
@@ -831,6 +831,30 @@ function s21Html(p, mode){
     name="<input id='eName' value='"+name+"' style='width:70%;padding:4px'>";
     dob="<input id='eDob' type='date' value='"+dob+"' style='padding:4px'>";
     bap="<input id='eBap' type='date' value='"+bap+"' style='padding:4px'>";
+  }
+  // --- THIS IS THE FIX: READ SAVED REPORTS ---
+  if(!p.reports) p.reports={};
+  var rows=""; var totalStudies=0, totalHours=0;
+  for(var i=0;i<months.length;i++){
+    var rep=p.reports[months[i]];
+    var shared="☐", studies="", aux="☐", hours="", remarks="";
+    if(rep){
+      shared=rep.shared?"☑":"☐";
+      studies=rep.studies||"";
+      aux=rep.aux?"☑":"☐";
+      hours=rep.hours||"";
+      remarks=rep.remarks||"";
+      totalStudies+=Number(rep.studies||0);
+      totalHours+=Number(rep.hours||0);
+    }
+    rows+="<tr><td style='border:1px solid #000;padding:6px;text-align:left'>"+months[i]+"</td><td style='border:1px solid #000;text-align:center'>"+shared+"</td><td style='border:1px solid #000'>"+studies+"</td><td style='border:1px solid #000;text-align:center'>"+aux+"</td><td style='border:1px solid #000'>"+hours+"</td><td style='border:1px solid #000'>"+remarks+"</td></tr>";
+  }
+  return "<div style='font-family:Arial;color:#000;max-width:780px;margin:0 auto;background:#fff;padding:10px'>"
+  +"<div style='text-align:center;font-weight:bold;font-size:19px;margin-bottom:12px'>CONGREGATION'S PUBLISHER RECORD</div>"
+  +"<div style='font-size:14px;line-height:1.9'><b>Name:</b> "+name+"<br><b>Date of birth:</b> "+dob+"<span style='float:right'>"+isMale+" Male &nbsp;&nbsp; "+isFemale+" Female</span><br><b>Date of baptism:</b> "+bap+"<span style='float:right'>"+isOther+" Other sheep &nbsp;&nbsp; "+isAnointed+" Anointed</span><br>"
+  +chk("elder")+" Elder &nbsp; "+chk("ministerial")+" Ministerial servant &nbsp; "+chk("regular")+" Regular pioneer &nbsp; "+chk("special")+" Special pioneer &nbsp; "+chk("field")+" Field missionary</div>"
+  +"<div style='overflow-x:auto'><table style='width:100%;border-collapse:collapse;margin-top:12px;font-size:13px;text-align:center;min-width:600px'><tr><th style='border:1px solid #000;padding:6px'>Service Year</th><th style='border:1px solid #000;padding:6px'>Shared in<br>Ministry</th><th style='border:1px solid #000;padding:6px'>Bible<br>Studies</th><th style='border:1px solid #000;padding:6px'>Auxiliary<br>Pioneer</th><th style='border:1px solid #000;padding:6px'>Hours<br>(If pioneer or field missionary)</th><th style='border:1px solid #000;padding:6px'>Remarks</th></tr>"+rows
+  +"<tr><td colspan='2' style='border:1px solid #000;padding:6px;text-align:right;font-weight:bold'>Total</td><td style='border:1px solid #000;font-weight:bold'>"+(totalStudies||"")+"</td><td style='border:1px solid #000'></td><td style='border:1px solid #000;font-weight:bold'>"+(totalHours||"")+"</td><td style='border:1px solid #000'></td></tr></table></div></div>";
   }
   var rows=""; for(var i=0;i<months.length;i++){
     rows+="<tr><td style='border:1px solid #000;padding:6px;text-align:left'>"+months[i]+"</td><td style='border:1px solid #000;text-align:center'>☐</td><td style='border:1px solid #000'></td><td style='border:1px solid #000;text-align:center'>☐</td><td style='border:1px solid #000'></td><td style='border:1px solid #000'></td></tr>";
@@ -910,7 +934,7 @@ function saveReport(idx){
     p.reports[m]={shared:document.getElementById("repShared").checked, studies:document.getElementById("repStudies").value, aux:document.getElementById("repAux").checked, hours:document.getElementById("repHours").value, remarks:document.getElementById("repRemarks").value, createdAt:now, editedCount:0};
     alert("Report saved for "+m+". You have 8 hours to edit it 1 time.");
   }
-  try{ localStorage.setItem("publishers",JSON.stringify(publishers)); }catch(e){}
+  try{ localStorage.setItem("publishers",JSON.stringify(publishers)); localStorage.setItem("chipunka_publishers",JSON.stringify(publishers)); }catch(e){}
   document.getElementById("repBox").remove(); viewPublisher(idx);
 }
 </script>
