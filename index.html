@@ -667,3 +667,64 @@ document.addEventListener('DOMContentLoaded', function(){
     navigator.serviceWorker.register('./sw.js').catch(function(){});
   }
 });
+function renderHomeReal(){
+  try{
+    var hn=document.getElementById('homeNotif');
+    if(hn){
+      if(notifications && notifications.length){
+        var h='';
+        for(var i=0;i<Math.min(3,notifications.length);i++){ h+='<div style="background:#f0fdf4;padding:10px;border-radius:8px;margin:5px 0"><b>'+(notifications[i].title||'')+'</b><br>'+(notifications[i].body||'')+'</div>'; }
+        hn.innerHTML=h;
+      } else { hn.innerHTML='<p>No announcements yet</p>'; }
+    }
+    var hd=document.getElementById('homeDev');
+    if(hd){
+      if(devotionals && devotionals.length){
+        var d=devotionals[0];
+        hd.innerHTML='<div style="background:#fffbeb;padding:10px;border-radius:8px"><b>'+(d.title||'Devotional')+'</b><br>'+(d.text||'')+'</div>';
+      } else { hd.innerHTML='<p>No devotional</p>'; }
+    }
+  }catch(e){}
+}
+function renderNotifications(){
+  try{
+    var el=document.getElementById('notifList'); if(!el) return;
+    if(!notifications.length){ el.innerHTML='<p>No notifications yet</p>'; return; }
+    var h='';
+    for(var i=0;i<notifications.length;i++){ h+='<div class="card"><b>'+(notifications[i].title||'')+'</b><br>'+(notifications[i].body||'')+'<br><small>'+(notifications[i].date||'')+'</small></div>'; }
+    el.innerHTML=h;
+  }catch(e){}
+  renderHomeReal();
+}
+function renderDevotionals(){
+  try{
+    var el=document.getElementById('devotionList'); if(!el) return;
+    if(!devotionals.length){ el.innerHTML='<p>No devotionals yet</p>'; return; }
+    var h='';
+    for(var i=0;i<devotionals.length;i++){ h+='<div class="card"><b>'+(devotionals[i].title||'')+'</b><br>'+(devotionals[i].text||'')+'</div>'; }
+    el.innerHTML=h;
+  }catch(e){}
+  renderHomeReal();
+}
+function sendAnnouncement(){
+  var t=document.getElementById('notifTitle').value.trim();
+  var b=document.getElementById('notifBody').value.trim();
+  if(!t || !b){ alert('Type Title AND Message'); return; }
+  notifications.unshift({title:t, body:b, type:document.getElementById('notifType').value, date:new Date().toLocaleDateString()});
+  document.getElementById('notifTitle').value=''; document.getElementById('notifBody').value='';
+  saveCloudFast(); renderNotifications(); renderHomeReal();
+  alert('Announcement SENT to all');
+}
+function addDevotional(){
+  var t=document.getElementById('devTitle').value.trim();
+  var x=document.getElementById('devText').value.trim();
+  if(!t || !x){ alert('Type Title AND Text'); return; }
+  devotionals.unshift({title:t, text:x, date:new Date().toLocaleDateString()});
+  document.getElementById('devTitle').value=''; document.getElementById('devText').value='';
+  saveCloudFast(); renderDevotionals(); renderHomeReal();
+  alert('Devotional ADDED');
+}
+setInterval(function(){ renderHomeReal(); renderNotifications(); renderDevotionals(); }, 2000);
+</script>
+</body>
+</html>
