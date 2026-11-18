@@ -758,6 +758,54 @@ function deleteUser(id){
   users=users.filter(u=>u.id!==id);
   saveCloudFast(); renderUsers();
 }
+</script><script>
+function lockPublisherView(){
+  try{
+    if(currentRole==='secretary') return;
+    // 1. ANNOUNCEMENTS - hide create boxes
+    ['notifTitle','notifBody','notifType','devTitle','devText'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.style.display='none';
+    });
+    // Hide Send / Add buttons
+    var btns=document.querySelectorAll('button');
+    for(var i=0;i<btns.length;i++){
+      var t=(btns[i].textContent||'').toLowerCase();
+      var oc=btns[i].getAttribute('onclick')||'';
+      if(t.includes('send to all') || t.includes('add devotional') || oc.includes('sendAnnouncement') || oc.includes('addDevotional') || oc.includes('saveMeetings')){
+        btns[i].style.display='none';
+      }
+    }
+    // Hide labels for create forms
+    var labels=document.querySelectorAll('label');
+    for(var j=0;j<labels.length;j++){
+      var lt=(labels[j].textContent||'').toLowerCase();
+      if(lt.includes('title') && labels[j].closest('div')){ /* keep */ }
+    }
+    // 2. MEETINGS - turn input boxes into plain text
+    var inputs=document.querySelectorAll('input');
+    for(var k=0;k<inputs.length;k++){
+      var inp=inputs[k];
+      // Only meeting day/time inputs - they are text/time, not login/create-user
+      if(inp.id && (inp.id.toLowerCase().includes('meet') || inp.id.toLowerCase().includes('wed') || inp.id.toLowerCase().includes('sun') || inp.id.toLowerCase().includes('day') || inp.id.toLowerCase().includes('time'))){
+        var span=document.createElement('div');
+        span.textContent=inp.value;
+        span.style.cssText='padding:10px;background:#f1f5f9;border-radius:8px;font-weight:600';
+        inp.parentNode.replaceChild(span, inp);
+      }
+    }
+    // Change "You can edit." to "Meeting Times"
+    var all=document.querySelectorAll('p,div,span');
+    for(var m=0;m<all.length;m++){
+      if(all[m].textContent.trim()==='You can edit.'){
+        all[m].textContent='Meeting Times - set by Secretary';
+      }
+    }
+    // Make Midweek Average table read-only
+    var tableInputs=document.querySelectorAll('table input');
+    for(var n=0;n<tableInputs.length;n++){ tableInputs[n].readOnly=true; tableInputs[n].disabled=true; }
+  }catch(e){}
+}
+setInterval(lockPublisherView, 1000);
 </script>
 </body>
 </html>
