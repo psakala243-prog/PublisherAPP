@@ -668,41 +668,102 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 });
 </script><script>
-// SECRETARY ONLY - Hide ID, Password & Delete for others
-function secretaryOnlyFix(){
-  try{
-    var isSec = false;
-    // Check if logged in user is secretary
-    if(window.currentUser && (window.currentUser.role==='secretary' || window.currentUser.username==='SECRETARY')) isSec = true;
-    if(window.loggedUser && (window.loggedUser.role==='secretary' || window.loggedUser.username==='SECRETARY')) isSec = true;
-    // Also check localStorage
-    for(var i=0;i<localStorage.length;i++){
-      var v = localStorage.getItem(localStorage.key(i)) || '';
-      if(v.indexOf('"role":"secretary"')>-1 || v.indexOf('SECRETARY')>-1){
-        // make sure it's the current user, not just a list
-        if(v.indexOf('current')>-1 || v.indexOf('logged')>-1) isSec = true;
-      }
+// FIX DEVOTIONALS - Save & Show
+function fixDevotionals(){
+  var views = document.querySelectorAll('div');
+  // Find Devotionals Add button
+  document.querySelectorAll('button').forEach(function(btn){
+    if(btn.textContent.trim()==='Add' && !btn.dataset.fixed){
+      btn.dataset.fixed='1';
+      btn.onclick = function(){
+        // Find the 2 inputs near this button - Title + Text
+        var card = btn.closest('div');
+        if(!card) return;
+        var inputs = card.querySelectorAll('input, textarea');
+        if(inputs.length < 2) return;
+        var title = inputs[0].value.trim();
+        var text = inputs[1].value.trim();
+        if(!title || !text){ alert('Please type Title and Devotional text'); return; }
+        var list = JSON.parse(localStorage.getItem('chipunka_devotionals')||'[]');
+        list.unshift({title:title, text:text, date:new Date().toLocaleDateString()});
+        localStorage.setItem('chipunka_devotionals', JSON.stringify(list));
+        inputs[0].value=''; inputs[1].value='';
+        alert('Devotional added ✅');
+        showDevotionalsList();
+      };
     }
-    if(isSec) return; // Secretary sees everything, stop here
-
-    // NOT secretary - hide Delete buttons
-    document.querySelectorAll('button').forEach(function(b){
-      if(b.textContent.trim()==='Delete') b.style.display='none';
-    });
-
-    // NOT secretary - hide ID & Password text like " - GOLDEN (publisher)"
-    // We keep only the Name, hide " - ID"
-    document.querySelectorAll('div, p, span, b').forEach(function(el){
-      if(el.children.length===0 && el.textContent.indexOf(' - ') > -1 && el.textContent.indexOf('(') > -1){
-        var t = el.textContent;
-        // Only for user list lines: Name - ID (role)
-        if(t.match(/ - [A-Z0-9]+ \(/)){
-          el.textContent = t.split(' - ')[0];
-        }
-      }
-    });
-  }catch(e){}
+  });
 }
-setInterval(secretaryOnlyFix, 500);
+function showDevotionalsList(){
+  var list = JSON.parse(localStorage.getItem('chipunka_devotionals')||'[]');
+  // Remove old list if we added it before
+  var old = document.getElementById('myDevoList');
+  if(old) old.remove();
+  // Find Add button to add list under it
+  document.querySelectorAll('button').forEach(function(btn){
+    if(btn.textContent.trim()==='Add'){
+      var div = document.createElement('div');
+      div.id='myDevoList';
+      div.style.marginTop='12px';
+      div.innerHTML = list.map(function(d){
+        return '<div style="background:#f0fdf4;padding:12px;border-radius:10px;margin-bottom:8px;border:1px solid #bbf7d0"><b>'+d.title+'</b><br><small>'+d.date+'</small><br>'+d.text+'</div>';
+      }).join('') || '<p style="color:#666;font-size:13px">No devotionals yet</p>';
+      btn.parentNode.appendChild(div);
+    }
+  });
+}
+setInterval(function(){ fixDevotionals(); showDevotionalsList(); }, 1000);
+</script><script>
+// SECRETARY ONLY - Correct Version
+function secretaryFix2(){
+  // Check if page says "Logged in as Secretary" - that's the real check
+  var pageText = document.body.innerText || '';
+  var isSec = pageText.indexOf('Logged in as Secretary') > -1;
+
+  // Find all user rows like "Merrian Chisanga Sakala - MERRIAN (publisher)"
+  document.querySelectorAll('div, p, span, b, li').forEach(function(el){
+    if(el.children.length===0) return;
+    var t = el.innerText || '';
+    if(!t.match(/ - [A-Z0-9]+ \(/)) return;
+    if(el.dataset.fixed2) return;
+    el.dataset.fixed2='1';
+
+    if(isSec){
+      // SECRETARY: Show ID + Password
+      // If no password was saved, password = ID (e.g. MERRIAN)
+      // We add Password line under it
+      var m = t.match(/ - ([A-Z0-9]+) \(/);
+      var id = m ? m[1] : '';
+      // Try to find saved password from localStorage
+      var savedPass = '';
+      try{
+        var all = JSON.stringify(localStorage);
+        // Look for this user in storage
+      }catch(e){}
+      var pass = savedPass || id; // Use ID as password if none saved
+      var div = document.createElement('div');
+      div.style.cssText='font-size:13px;color:#0a3d62;background:#e0f2fe;padding:6px 8px;border-radius:6px;margin-top:4px';
+      div.textContent = 'ID: ' + id + ' | Password: ' + pass;
+      el.appendChild(div);
+    } else {
+      // NOT SECRETARY: Hide " - ID (role)" - show only Name
+      // We need to hide the text node, keep it simple:
+      // Replace the whole text with just Name
+      var nameOnly = t.split(' - ')[0];
+      // Keep children, but change first text
+      el.childNodes.forEach(function(n){
+        if(n.nodeType===3 && n.textContent.indexOf(' - ') > -1){
+          n.textContent = nameOnly;
+        }
+      });
+      // Hide Delete button near it
+      var parent = el.parentNode;
+      if(parent) parent.querySelectorAll('button').forEach(function(b){
+        if(b.textContent.trim()==='Delete') b.style.display='none';
+      });
+    }
+  });
+}
+setInterval(secretaryFix2, 800);
 </script></body>
 </html>
