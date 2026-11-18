@@ -797,12 +797,37 @@ function lockPublisherView2(){
 }
 setInterval(lockPublisherView2, 1000);
 }
-</script>
-<script>
-// DEBUG - LAST in file
-function viewPublisher(a){ alert("View sent: ["+a+"] | publishers: "+(typeof publishers)+" | count: "+(publishers?publishers.length:"0")); }
-function editPublisher(a){ alert("Edit sent: ["+a+"] | publishers: "+(typeof publishers)+" | count: "+(publishers?publishers.length:"0")); }
-function printPublisher(a){ alert("Print sent: ["+a+"] | publishers: "+(typeof publishers)+" | count: "+(publishers?publishers.length:"0")); }
+</script><script>
+// REAL FIX - buttons send INDEX (0,1), not ID
+function getPub(a){
+  var idx = Number(a);
+  if(!isNaN(idx) && publishers && publishers[idx]) return {p:publishers[idx], idx:idx};
+  return {p:null, idx:-1};
+}
+function viewPublisher(a){
+  var r=getPub(a); if(!r.p){ alert("Not found"); return; }
+  alert("Name: "+r.p.name+"\nID: "+r.p.id+"\nGroup: "+(r.p.group||r.p.Group||"-")+"\nService: "+(r.p.pioneer||r.p.service||"Publisher")+"\nDOB: "+(r.p.dob||r.p.DOB||"-")+"\nBaptism: "+(r.p.baptism||r.p.Baptism||"-"));
+}
+function editPublisher(a){
+  var r=getPub(a); if(!r.p){ alert("Not found"); return; }
+  publisher_editIndex=r.idx;
+  function set(id,val){ var e=document.getElementById(id); if(e) e.value=val||""; }
+  set("fName",r.p.name); set("s21Name",r.p.name);
+  set("fId",r.p.id); set("s21Id",r.p.id);
+  set("fDob",r.p.dob||r.p.DOB||""); set("fBap",r.p.baptism||r.p.Baptism||"");
+  set("fGroup",r.p.group||r.p.Group||"");
+  var t=document.getElementById("s21EditTitle"); if(t) t.textContent="Editing: "+r.p.name;
+  var card=document.getElementById("s21EditCard"); if(card) card.style.display="block";
+  if(typeof showTab==="function") showTab("s21");
+  if(card) card.scrollIntoView();
+}
+function printPublisher(a){
+  var r=getPub(a); if(!r.p){ alert("Not found"); return; }
+  var pa=document.getElementById("printArea");
+  var html="<h2>S-21 RECORD - Chipunka</h2><p>Name: "+r.p.name+"</p><p>ID: "+r.p.id+"</p><p>Group: "+(r.p.group||"")+"</p><p>DOB: "+(r.p.dob||r.p.DOB||"")+"</p><p>Baptism: "+(r.p.baptism||r.p.Baptism||"")+"</p>";
+  if(pa){ pa.innerHTML=html; } else { document.body.insertAdjacentHTML("beforeend","<div id='printArea'>"+html+"</div>"); }
+  window.print();
+}
 </script>
 </body>
 </html>
