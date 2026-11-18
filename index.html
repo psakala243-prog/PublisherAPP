@@ -796,6 +796,52 @@ function lockPublisherView2(){
   }catch(e){}
 }
 setInterval(lockPublisherView2, 1000);
+</script><script>
+// SAFE S-21 BUTTONS - works even if original modal is broken
+function viewPublisher(id){
+  try{
+    var p=(typeof publishers!=='undefined'?publishers:users).find(function(x){return x.id===id});
+    if(!p){ alert('Not found: '+id); return; }
+    alert('Name: '+p.name+'\nID: '+p.id+'\nRole: '+(p.role||'Publisher')+'\nHours: '+(p.hours||0)+'\nDOB: '+(p.dob||'-')+'\nBaptism: '+(p.baptism||'-'));
+  }catch(e){ alert('View error: '+e.message); }
+}
+function editPublisher(id){
+  try{
+    var arr=(typeof publishers!=='undefined'?publishers:users);
+    var p=arr.find(function(x){return x.id===id});
+    if(!p){ alert('Not found'); return; }
+    var nm=prompt('Edit Name:', p.name); if(nm===null) return;
+    var hr=prompt('Edit Hours:', p.hours||0); if(hr===null) return;
+    var dob=prompt('Edit DOB (YYYY-MM-DD):', p.dob||''); if(dob===null) return;
+    var bap=prompt('Edit Baptism (YYYY-MM-DD):', p.baptism||''); if(bap===null) return;
+    p.name=nm; p.hours=Number(hr)||0; p.dob=dob; p.baptism=bap;
+    if(typeof saveCloudFast==='function') saveCloudFast();
+    if(typeof renderS21==='function') renderS21();
+    if(typeof renderPublishers==='function') renderPublishers();
+    if(typeof renderUsers==='function') renderUsers();
+    alert('Saved: '+p.name);
+  }catch(e){ alert('Edit error: '+e.message); }
+}
+// Keep old name working too
+function editUser(id){ editPublisher(id); }
+function viewUser(id){ viewPublisher(id); }
+function printPublisher(id){
+  try{
+    var p=(typeof publishers!=='undefined'?publishers:users).find(function(x){return x.id===id});
+    if(p){ var w=window.open('','_blank'); w.document.write('<h2>S-21 Card</h2><p>Name: '+p.name+'</p><p>ID: '+p.id+'</p><p>Hours: '+(p.hours||0)+'</p><p>DOB: '+(p.dob||'-')+'</p><p>Baptism: '+(p.baptism||'-')+'</p>'); w.print(); }
+  }catch(e){ alert('Print error: '+e.message); }
+}
+function deletePublisher(id){
+  if(!confirm('Delete '+id+'?')) return;
+  try{
+    if(typeof publishers!=='undefined') publishers=publishers.filter(function(x){return x.id!==id});
+    if(typeof users!=='undefined') users=users.filter(function(x){return x.id!==id});
+    if(typeof saveCloudFast==='function') saveCloudFast();
+    if(typeof renderS21==='function') renderS21();
+    if(typeof renderPublishers==='function') renderPublishers();
+    alert('Deleted');
+  }catch(e){ alert(e.message); }
+}
 </script>
 </body>
 </html>
