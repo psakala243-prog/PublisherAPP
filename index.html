@@ -853,5 +853,25 @@ function fixHomeDevo(){
   }catch(e){}
 }
 setInterval(fixHomeDevo, 1000);
+</script><script>
+function fixHomeDevo(){
+  try{
+    var devos = JSON.parse(localStorage.getItem('chipunka_devotionals')||'[]');
+    if(!devos.length) return;
+    localStorage.setItem('devotionals', JSON.stringify(devos));
+    var els = document.querySelectorAll('p, div, span');
+    for(var i=0;i<els.length;i++){
+      var t = els[i].textContent || '';
+      // Match BOTH "No devotional" and "No devotionals"
+      if(t.trim()==='No devotional' || t.trim()==='No devotionals'){
+        if(els[i].getAttribute('data-fixed')) continue;
+        els[i].setAttribute('data-fixed','1');
+        var d = devos[0];
+        els[i].innerHTML = '<div style="background:#f0fdf4;padding:12px;border-radius:10px;border:1px solid #bbf7d0;text-align:left"><b>'+(d.title||'Devotional')+'</b><br><small>'+(d.date||'')+'</small><br>'+(d.text||d.content||'')+'</div>';
+      }
+    }
+  }catch(e){}
+}
+setInterval(fixHomeDevo, 1000);
 </script></body>
 </html>
