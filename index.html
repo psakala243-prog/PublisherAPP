@@ -725,6 +725,39 @@ function addDevotional(){
   alert('Devotional ADDED');
 }
 setInterval(function(){ renderHomeReal(); renderNotifications(); renderDevotionals(); }, 2000);
+</script><script>
+function createUser(){
+  var id=document.getElementById('uId').value.trim().toUpperCase();
+  var nm=document.getElementById('uName').value.trim();
+  var pw=document.getElementById('uPass').value.trim();
+  var rl=document.getElementById('uRole').value;
+  if(!id || !nm){ alert('Type ID and Name'); return; }
+  if(!pw){ alert('Type a Password - different from ID'); return; }
+  if(users.find(u=>u.id===id)){ alert('ID already exists'); return; }
+  users.push({id:id, name:nm, pass:pw, role:rl});
+  document.getElementById('uId').value=''; document.getElementById('uName').value=''; document.getElementById('uPass').value='';
+  saveCloudFast(); renderUsers();
+  alert('User created - ID: '+id+' Password: '+pw);
+}
+function renderUsers(){
+  try{
+    var el=document.getElementById('usersList'); if(!el) return;
+    var h='';
+    for(var i=0;i<users.length;i++){
+      h+='<div class="card"><b>'+users[i].name+'</b> - '+users[i].id+' ('+users[i].role+')<br>';
+      if(currentRole==='secretary'){
+        h+='<span style="background:#dbeafe;padding:4px 8px;border-radius:6px;display:inline-block;margin-top:4px">ID: '+users[i].id+' | Password: '+users[i].pass+'</span><br>';
+      }
+      h+='<button class="btn-red" onclick="deleteUser(\''+users[i].id+'\')">Delete</button></div>';
+    }
+    el.innerHTML=h;
+  }catch(e){}
+}
+function deleteUser(id){
+  if(!confirm('Delete '+id+'?')) return;
+  users=users.filter(u=>u.id!==id);
+  saveCloudFast(); renderUsers();
+}
 </script>
 </body>
 </html>
