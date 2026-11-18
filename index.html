@@ -796,3 +796,13 @@ function lockPublisherView2(){
   }catch(e){}
 }
 setInterval(lockPublisherView2, 1000);
+}
+</script>
+<script>
+// DEBUG - LAST in file
+function viewPublisher(a){ alert("View sent: ["+a+"] | publishers: "+(typeof publishers)+" | count: "+(publishers?publishers.length:"0")); }
+function editPublisher(a){ alert("Edit sent: ["+a+"] | publishers: "+(typeof publishers)+" | count: "+(publishers?publishers.length:"0")); }
+function printPublisher(a){ alert("Print sent: ["+a+"] | publishers: "+(typeof publishers)+" | count: "+(publishers?publishers.length:"0")); }
+</script>
+</body>
+</html>
