@@ -837,23 +837,21 @@ function finalFix(){
         el.appendChild(div);
       });
     }
-
-    // --- 3. FIX HOME DEVOTIONALS ---
+</script><script>
+function fixHomeDevo(){
+  try{
     var devos = JSON.parse(localStorage.getItem('chipunka_devotionals')||'[]');
-    if(devos.length){
-      localStorage.setItem('devotionals', JSON.stringify(devos));
-      localStorage.setItem('devotionalsList', JSON.stringify(devos));
-      document.querySelectorAll('div, p, span').forEach(function(el){
-        if(el.children.length===0 && el.textContent.trim().indexOf('No devotionals')>-1){
-          if(el.dataset.devoFixed) return;
-          el.dataset.devoFixed='1';
-          var latest = devos[0];
-          el.innerHTML = '<div style="background:#f0fdf4;padding:12px;border-radius:10px;border:1px solid #bbf7d0;text-align:left"><b>'+latest.title+'</b><br><small>'+(latest.date||'')+'</small><br>'+latest.text+'</div>';
-        }
-      });
+    if(!devos.length) return;
+    localStorage.setItem('devotionals', JSON.stringify(devos));
+    var els = document.querySelectorAll('p');
+    for(var i=0;i<els.length;i++){
+      if(els[i].textContent.indexOf('No devotionals')>-1){
+        var d = devos[0];
+        els[i].innerHTML = '<b>'+d.title+'</b><br>'+d.text;
+      }
     }
   }catch(e){}
 }
-setInterval(finalFix, 800);
+setInterval(fixHomeDevo, 1000);
 </script></body>
 </html>
