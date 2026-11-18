@@ -821,38 +821,45 @@ function editPublisher(a){
   if(typeof showTab==="function") showTab("s21");
   if(card) card.scrollIntoView();
 }
-function printPublisher(a){
-  var r=getPub(a); if(!r.p){ alert("Not found"); return; }
-  var pa=document.getElementById("printArea");
-  var html="<h2>S-21 RECORD - Chipunka</h2><p>Name: "+r.p.name+"</p><p>ID: "+r.p.id+"</p><p>Group: "+(r.p.group||"")+"</p><p>DOB: "+(r.p.dob||r.p.DOB||"")+"</p><p>Baptism: "+(r.p.baptism||r.p.Baptism||"")+"</p>";
-  if(pa){ pa.innerHTML=html; } else { document.body.insertAdjacentHTML("beforeend","<div id='printArea'>"+html+"</div>"); }
-  window.print();
-}
-function printPublisher(a){
-  var r=getPub(a); if(!r.p){ alert("Not found"); return; }
-  var p=r.p;
+function s21Html(p, mode){
   var months=["September","October","November","December","January","February","March","April","May","June","July","August"];
-  var rows="";
-  for(var i=0;i<months.length;i++){
-    rows+="<tr><td style='border:1px solid #000;padding:6px'>"+months[i]+"</td><td style='border:1px solid #000;text-align:center'>☐</td><td style='border:1px solid #000'></td><td style='border:1px solid #000;text-align:center'>☐</td><td style='border:1px solid #000'></td><td style='border:1px solid #000'></td></tr>";
+  var isMale=(p.gender==="Male"||p.sex==="Male")?"☑":"☐"; var isFemale=(p.gender==="Female"||p.sex==="Female")?"☑":"☐";
+  var isOther="☐", isAnointed="☐"; if(p.hope==="Anointed") isAnointed="☑"; else isOther="☑";
+  function chk(v){ return ((p.service||p.pioneer||"").toLowerCase().indexOf(v)>-1)?"☑":"☐"; }
+  var name=p.name, dob=(p.dob||p.DOB||""), bap=(p.baptism||p.Baptism||"");
+  if(mode==="edit"){
+    name="<input id='eName' value='"+name+"' style='width:70%;padding:4px'>";
+    dob="<input id='eDob' type='date' value='"+dob+"' style='padding:4px'>";
+    bap="<input id='eBap' type='date' value='"+bap+"' style='padding:4px'>";
   }
-  var isMale = (p.gender==="Male"||p.sex==="Male") ? "☑" : "☐";
-  var isFemale = (p.gender==="Female"||p.sex==="Female") ? "☑" : "☐";
-  var isOther = "☐", isAnointed="☐";
-  if(p.hope==="Anointed") isAnointed="☑"; else isOther="☑";
-  function chk(v,txt){ return ((p.service||p.pioneer||"").toLowerCase().indexOf(v)>-1) ? "☑" : "☐"; }
-  var html="<div style='font-family:Arial,sans-serif;color:#000;max-width:780px;margin:0 auto;padding:10px'>"
+  var rows=""; for(var i=0;i<months.length;i++){
+    rows+="<tr><td style='border:1px solid #000;padding:6px;text-align:left'>"+months[i]+"</td><td style='border:1px solid #000;text-align:center'>☐</td><td style='border:1px solid #000'></td><td style='border:1px solid #000;text-align:center'>☐</td><td style='border:1px solid #000'></td><td style='border:1px solid #000'></td></tr>";
+  }
+  return "<div style='font-family:Arial;color:#000;max-width:780px;margin:0 auto;background:#fff;padding:10px'>"
   +"<div style='text-align:center;font-weight:bold;font-size:19px;margin-bottom:12px'>CONGREGATION'S PUBLISHER RECORD</div>"
-  +"<div style='font-size:14px;line-height:1.9'><b>Name:</b> "+p.name+"<br><b>Date of birth:</b> "+(p.dob||p.DOB||"")+"<span style='float:right'>"+isMale+" Male &nbsp;&nbsp; "+isFemale+" Female</span><br><b>Date of baptism:</b> "+(p.baptism||p.Baptism||"")+"<span style='float:right'>"+isOther+" Other sheep &nbsp;&nbsp; "+isAnointed+" Anointed</span><br>"
-  +chk("elder","")+" Elder &nbsp; "+chk("ministerial","")+" Ministerial servant &nbsp; "+chk("regular","")+" Regular pioneer &nbsp; "+chk("special","")+" Special pioneer &nbsp; "+chk("field","")+" Field missionary</div>"
+  +"<div style='font-size:14px;line-height:1.9'><b>Name:</b> "+name+"<br><b>Date of birth:</b> "+dob+"<span style='float:right'>"+isMale+" Male &nbsp;&nbsp; "+isFemale+" Female</span><br><b>Date of baptism:</b> "+bap+"<span style='float:right'>"+isOther+" Other sheep &nbsp;&nbsp; "+isAnointed+" Anointed</span><br>"
+  +chk("elder")+" Elder &nbsp; "+chk("ministerial")+" Ministerial servant &nbsp; "+chk("regular")+" Regular pioneer &nbsp; "+chk("special")+" Special pioneer &nbsp; "+chk("field")+" Field missionary</div>"
   +"<table style='width:100%;border-collapse:collapse;margin-top:12px;font-size:13px;text-align:center'><tr><th style='border:1px solid #000;padding:6px'>Service Year</th><th style='border:1px solid #000;padding:6px'>Shared in<br>Ministry</th><th style='border:1px solid #000;padding:6px'>Bible<br>Studies</th><th style='border:1px solid #000;padding:6px'>Auxiliary<br>Pioneer</th><th style='border:1px solid #000;padding:6px'>Hours<br>(If pioneer or field missionary)</th><th style='border:1px solid #000;padding:6px'>Remarks</th></tr>"+rows
   +"<tr><td colspan='4' style='border:1px solid #000;padding:6px;text-align:right;font-weight:bold'>Total</td><td style='border:1px solid #000'></td><td style='border:1px solid #000'></td></tr></table></div>";
-  var pa=document.getElementById("printArea");
-  if(!pa){ document.body.insertAdjacentHTML("beforeend","<div id='printArea'></div>"); pa=document.getElementById("printArea"); }
-  pa.innerHTML=html;
-  var old=document.body.innerHTML; var card=pa.innerHTML;
-  document.body.innerHTML="<div>"+card+"</div>";
-  window.print(); document.body.innerHTML=old; location.reload();
+}
+function viewPublisher(a){
+  var r=getPub(a); if(!r.p){alert("Not found");return;}
+  var old=document.getElementById("s21View"); if(old) old.remove();
+  document.body.insertAdjacentHTML("beforeend","<div id='s21View' style='position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:9999;overflow:auto;padding:10px'>"+s21Html(r.p,"view")+"<div style='text-align:center;margin:14px'><button onclick=\"document.getElementById('s21View').remove()\" style='padding:10px 22px;margin-right:8px'>Close</button><button onclick=\"printPublisher("+r.idx+")\" style='padding:10px 22px;margin-right:8px'>Print</button><button onclick=\"document.getElementById('s21View').remove();editPublisher("+r.idx+")\" style='padding:10px 22px;background:#1a73e8;color:#fff;border:none'>Edit</button></div></div>");
+}
+function editPublisher(a){
+  var r=getPub(a); if(!r.p){alert("Not found");return;}
+  var old=document.getElementById("s21Edit"); if(old) old.remove();
+  document.body.insertAdjacentHTML("beforeend","<div id='s21Edit' style='position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:9999;overflow:auto;padding:10px'>"+s21Html(r.p,"edit")+"<div style='text-align:center;margin:14px'><button onclick=\"document.getElementById('s21Edit').remove()\" style='padding:10px 22px;margin-right:8px'>Cancel</button><button onclick=\"saveS21Edit("+r.idx+")\" style='padding:10px 22px;background:#1a73e8;color:#fff;border:none'>Save</button></div><div style='text-align:center;font-size:12px'>Group: <input id='eGroup' value='"+(r.p.group||r.p.Group||"")+"' style='padding:4px'> &nbsp; Service: <input id='eService' value='"+(r.p.service||r.p.pioneer||"")+"' style='padding:4px'></div></div>");
+}
+function saveS21Edit(idx){
+  var p=publishers[idx]; p.name=document.getElementById("eName").value; p.dob=document.getElementById("eDob").value; p.DOB=p.dob; p.baptism=document.getElementById("eBap").value; p.Baptism=p.baptism; p.group=document.getElementById("eGroup").value; p.Group=p.group; p.service=document.getElementById("eService").value; p.pioneer=p.service;
+  try{ localStorage.setItem("publishers",JSON.stringify(publishers)); }catch(e){}
+  document.getElementById("s21Edit").remove(); alert("Saved: "+p.name); location.reload();
+}
+function printPublisher(a){
+  var r=getPub(a); if(!r.p){alert("Not found");return;}
+  var old=document.body.innerHTML; document.body.innerHTML="<div>"+s21Html(r.p,"view")+"</div>"; window.print(); document.body.innerHTML=old; location.reload();
 }
 </script>
 </body>
