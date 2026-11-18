@@ -667,5 +667,42 @@ document.addEventListener('DOMContentLoaded', function(){
     navigator.serviceWorker.register('./sw.js').catch(function(){});
   }
 });
+</script><script>
+// SECRETARY ONLY - Hide ID, Password & Delete for others
+function secretaryOnlyFix(){
+  try{
+    var isSec = false;
+    // Check if logged in user is secretary
+    if(window.currentUser && (window.currentUser.role==='secretary' || window.currentUser.username==='SECRETARY')) isSec = true;
+    if(window.loggedUser && (window.loggedUser.role==='secretary' || window.loggedUser.username==='SECRETARY')) isSec = true;
+    // Also check localStorage
+    for(var i=0;i<localStorage.length;i++){
+      var v = localStorage.getItem(localStorage.key(i)) || '';
+      if(v.indexOf('"role":"secretary"')>-1 || v.indexOf('SECRETARY')>-1){
+        // make sure it's the current user, not just a list
+        if(v.indexOf('current')>-1 || v.indexOf('logged')>-1) isSec = true;
+      }
+    }
+    if(isSec) return; // Secretary sees everything, stop here
+
+    // NOT secretary - hide Delete buttons
+    document.querySelectorAll('button').forEach(function(b){
+      if(b.textContent.trim()==='Delete') b.style.display='none';
+    });
+
+    // NOT secretary - hide ID & Password text like " - GOLDEN (publisher)"
+    // We keep only the Name, hide " - ID"
+    document.querySelectorAll('div, p, span, b').forEach(function(el){
+      if(el.children.length===0 && el.textContent.indexOf(' - ') > -1 && el.textContent.indexOf('(') > -1){
+        var t = el.textContent;
+        // Only for user list lines: Name - ID (role)
+        if(t.match(/ - [A-Z0-9]+ \(/)){
+          el.textContent = t.split(' - ')[0];
+        }
+      }
+    });
+  }catch(e){}
+}
+setInterval(secretaryOnlyFix, 500);
 </script></body>
 </html>
