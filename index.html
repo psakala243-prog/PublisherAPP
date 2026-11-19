@@ -1195,4 +1195,67 @@ setInterval(()=>{checkCleaningNotify(); if(!currentUser) return; let now=new Dat
   // Run every 800ms so it appears even after Gallery re-renders
   setInterval(addDownloadButtons, 800);
 })();
+</script><script>
+// === FIX 6 V2 - STABLE Dropdown - NO BLINKING - Builds Once ===
+(function(){
+  let built=false;
+
+  function collectNamesOnce(){
+    let names=new Set();
+    document.querySelectorAll('#s21List .pubCard, #s21List .card').forEach(card=>{
+      let b=card.querySelector('b');
+      if(b){
+        let n=b.innerText.trim().replace(/^[📄👤📖💰🧹👥📸📣🔒✅❌⏳]/,'').trim();
+        if(n.length>2 && n.length<40 && !n.toLowerCase().includes('group') && !n.toLowerCase().includes('s-21')) names.add(n);
+      }
+    });
+    try{
+      let g=JSON.parse(localStorage.getItem('chipunka_groups')||'[]');
+      g.forEach(x=>{ if(x.overseer) names.add(x.overseer); if(x.assistant) names.add(x.assistant); });
+    }catch(e){}
+    return Array.from(names).sort();
+  }
+
+  function buildOnce(){
+    if(built) return;
+    let over=document.getElementById('grpOver');
+    let asst=document.getElementById('grpAsst');
+    if(!over || !asst) return;
+    if(over.tagName==='SELECT' && over.options.length>5) { built=true; return; }
+    if(over.tagName!=='SELECT') return; // Wait until old code makes it SELECT, then fill once
+    let names=collectNamesOnce();
+    if(names.length<5) return; // Wait until S-21 names loaded
+
+    // Fill ONCE, then never touch again
+    let overVal=over.value;
+    over.innerHTML='<option value="">-- Select Overseer --</option>' + names.map(n=>`<option value="${n}">${n}</option>`).join('');
+    if(overVal) over.value=overVal;
+    let asstVal=asst.value;
+    asst.innerHTML='<option value="">-- Select Assistant (Optional) --</option>' + names.map(n=>`<option value="${n}">${n}</option>`).join('');
+    if(asstVal) asst.value=asstVal;
+
+    // Fix style ONCE
+    over.style.cssText='width:100%;padding:12px;margin:8px 0;font-size:16px;background:#fff;border:1px solid #cbd5e1;border-radius:10px';
+    asst.style.cssText='width:100%;padding:12px;margin:8px 0;font-size:16px;background:#fff;border:1px solid #cbd5e1;border-radius:10px';
+    let grpBox=document.getElementById('grpQuickBtns');
+    if(grpBox) grpBox.style.cssText='display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;padding:10px;background:#f8fafc;border-radius:10px';
+
+    built=true;
+    console.log('Group dropdown built once, no more blinking. Names:', names.length);
+  }
+
+  // Only check every 2 seconds UNTIL built, then STOP forever
+  let checker=setInterval(()=>{
+    buildOnce();
+    if(built) clearInterval(checker);
+  }, 2000);
+
+  // If user taps Refresh, rebuild ONCE
+  document.addEventListener('click', (e)=>{
+    if(e.target && e.target.id==='grpRefreshBtn'){
+      built=false;
+      setTimeout(buildOnce, 500);
+    }
+  });
+})();
 </script></body></html>
