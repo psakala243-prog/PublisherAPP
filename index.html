@@ -1195,4 +1195,146 @@ setInterval(()=>{checkCleaningNotify(); if(!currentUser) return; let now=new Dat
   // Run every 800ms so it appears even after Gallery re-renders
   setInterval(addDownloadButtons, 800);
 })();
+</script><script>
+// === FIX 6 - Group Overseer: Select From Registered Names ===
+(function(){
+  // --- 1. COLLECT NAMES FROM APP ---
+  function collectNames(){
+    let names=new Set();
+    // From S-21 list cards
+    document.querySelectorAll('#s21List .pubCard, #s21List .card').forEach(card=>{
+      let b=card.querySelector('b');
+      if(b){
+        let n=b.innerText.trim();
+        // Clean: remove emojis, "Group:" etc
+        n=n.replace(/^[📄👤📖💰🧹👥📸📣🔒✅❌⏳]/,'').trim();
+        if(n.length>2 && n.length<40 && !n.toLowerCase().includes('group') && !n.toLowerCase().includes('s-21') && !n.toLowerCase().includes('meetings') && !n.toLowerCase().includes('announcement')) names.add(n);
+      }
+    });
+    // From Users list if exists
+    document.querySelectorAll('#userList .card, #userList div').forEach(el=>{
+      let t=(el.innerText||'').split('\n')[0].trim();
+      if(t && t.length>2 && t.length<40 && !t.includes('@') && !t.includes('Users')) names.add(t);
+    });
+    // From stored groups + donations + daily (backup)
+    try{
+      let g=JSON.parse(localStorage.getItem('chipunka_groups')||'[]');
+      g.forEach(x=>{ if(x.overseer) names.add(x.overseer); if(x.assistant) names.add(x.assistant); });
+      let d=JSON.parse(localStorage.getItem('chipunka_donate')||'[]');
+      d.forEach(x=>{ if(x.name) names.add(x.name); });
+    }catch(e){}
+    // Sort A-Z
+    return Array.from(names).sort();
+  }
+
+  // --- 2. REPLACE TEXT INPUTS WITH DROPDOWNS ---
+  function replaceWithDropdowns(){
+    let overInput=document.getElementById('grpOver');
+    let asstInput=document.getElementById('grpAsst');
+    if(!overInput || !asstInput) return;
+    // If already dropdown, just update options
+    if(overInput.tagName==='SELECT'){
+      updateOptions();
+      return;
+    }
+    let names=collectNames();
+    // If no names yet, wait - user needs to open S-21s once to load names
+    // But still create dropdown with hint
+    let overSelect=document.createElement('select');
+    overSelect.id='grpOver';
+    overSelect.style.cssText='width:100%;padding:10px;margin:6px 0';
+    let asstSelect=document.createElement('select');
+    asstSelect.id='grpAsst';
+    asstSelect.style.cssText='width:100%;padding:10px;margin:6px 0';
+
+    // Copy label text? Keep placeholders
+    overInput.replaceWith(overSelect);
+    asstInput.replaceWith(asstSelect);
+    updateOptions();
+
+    // Add hint + refresh button
+    if(!document.getElementById('grpRefreshBtn')){
+      let btn=document.createElement('button');
+      btn.id='grpRefreshBtn';
+      btn.className='btn-blue';
+      btn.style.cssText='width:100%;margin-top:6px';
+      btn.innerText='🔄 Refresh Names List';
+      btn.onclick=function(){
+        // Try to load S-21 names by opening S-21 tab in background
+        updateOptions();
+        alert('Names refreshed: '+collectNames().length+' names found. If list is empty, open All S-21s once, then come back here.');
+      };
+      asstSelect.after(btn);
+      let hint=document.createElement('p');
+      hint.className='small';
+      hint.innerText='Tip: If names are missing, open All S-21s once, then come back to My Group. Names load from registered publishers.';
+      btn.after(hint);
+    }
+  }
+
+  function updateOptions(){
+    let names=collectNames();
+    let over=document.getElementById('grpOver');
+    let asst=document.getElementById('grpAsst');
+    if(!over || over.tagName!=='SELECT') return;
+    let overVal=over.value;
+    let asstVal=asst ? asst.value : '';
+    let opts='<option value="">-- Select Overseer --</option>' + names.map(n=>`<option value="${n}">${n}</option>`).join('');
+    over.innerHTML=opts;
+    if(overVal) over.value=overVal;
+    if(asst && asst.tagName==='SELECT'){
+      asst.innerHTML='<option value="">-- Select Assistant (Optional) --</option>' + names.map(n=>`<option value="${n}">${n}</option>`).join('');
+      if(asstVal) asst.value=asstVal;
+    }
+    // Show count
+    let hint=document.querySelector('#groupForm .small');
+    if(hint && names.length) hint.innerText=names.length+' registered publishers found. Select from list.';
+  }
+
+  // --- 3. FIX saveGroup to use dropdown values ---
+  let oldSaveGroup = window.saveGroup;
+  window.saveGroup=function(){
+    let gEl=document.getElementById('grpName');
+    let oEl=document.getElementById('grpOver');
+    let aEl=document.getElementById('grpAsst');
+    let g=gEl ? gEl.value.trim() : '';
+    let o=oEl ? oEl.value.trim() : '';
+    let a=aEl ? aEl.value.trim() : '';
+    if(!g||!o){ alert('Please select Group + Overseer from list'); return; }
+    if(o===a && a!==''){ alert('Overseer and Assistant cannot be same person'); return; }
+    // Use original save logic but with dropdown values
+    try{
+      let arr=JSON.parse(localStorage.getItem('chipunka_groups')||'[]');
+      let ex=arr.find(x=>x.group.toLowerCase()===g.toLowerCase());
+      if(ex){ ex.overseer=o; ex.assistant=a; } else arr.push({group:g,overseer:o,assistant:a});
+      localStorage.setItem('chipunka_groups', JSON.stringify(arr));
+      if(window.renderGroups) window.renderGroups();
+      // After renderGroups, dropdowns get recreated - need to restore
+      setTimeout(replaceWithDropdowns, 500);
+      alert('✅ Saved - '+o+' is now Overseer of '+g+'\nAssistant: '+(a||'None'));
+    }catch(e){
+      if(oldSaveGroup) oldSaveGroup();
+    }
+  };
+
+  // --- 4. ALSO MAKE GROUP NAME A DROPDOWN ---
+  function fixGroupName(){
+    let gEl=document.getElementById('grpName');
+    if(!gEl || gEl.tagName==='SELECT') return;
+    // Keep text for Group Name, but add quick buttons for Group 1-10
+    if(document.getElementById('grpQuickBtns')) return;
+    let div=document.createElement('div');
+    div.id='grpQuickBtns';
+    div.style.cssText='display:flex;flex-wrap:wrap;gap:6px;margin:6px 0';
+    div.innerHTML=[1,2,3,4,5,6,7,8,9,10].map(i=>`<button type="button" class="btn-gray" style="padding:6px 10px" onclick="document.getElementById('grpName').value='Group ${i}'">Group ${i}</button>`).join('');
+    gEl.after(div);
+    gEl.placeholder='e.g. Group 1 - or tap below';
+  }
+
+  setInterval(()=>{
+    replaceWithDropdowns();
+    fixGroupName();
+    updateOptions();
+  }, 1000);
+})();
 </script></body></html>
