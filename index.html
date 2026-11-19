@@ -1363,169 +1363,147 @@ setInterval(()=>{checkCleaningNotify(); if(!currentUser) return; let now=new Dat
   // by checking localStorage directly for S-21 data if S-21 DOM is empty
   // (Your S-21 data is in Firebase, so opening All S-21s once loads it)
 })();
-</script><script>
-// === FIX 8 - Overseer Sees Only His Group S-21s ===
+  <script>
+// === FIX 8 V2 - CORRECT - Use Group Already Saved In S-21 ===
 (function(){
   function getK(k,d){ try{ return JSON.parse(localStorage.getItem(k)||JSON.stringify(d)); }catch(e){ return d; } }
-  function setK(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
 
-  // Name -> Group map, e.g. {"Ackson Bwalya":"Group 1"}
-  function getMemberGroups(){ return getK('chipunka_member_groups', {}); }
   function getGroups(){ return getK('chipunka_groups', []); }
 
-  // Who is logged in? Try whoLine, or stored user
-  function currentUserName(){
+  function currentUser(){
     let who=document.getElementById('whoLine');
-    if(who){
-      let t=who.innerText||'';
-      // Format is usually "Name - secretary" or "Name (secretary)"
-      let name=t.split('-')[0].split('(')[0].trim();
-      if(name && name.length>2 && !name.toLowerCase().includes('welcome')) return name;
-    }
-    return localStorage.getItem('chipunka_user_name') || '';
+    let t=(who?who.innerText:'').trim();
+    // whoLine looks like: "Ackson Bwalya - overseer" or "Patrick Sakala - secretary"
+    let parts=t.split('-');
+    let name=(parts[0]||'').trim();
+    let role=(parts[1]||'').trim().toLowerCase();
+    // Also try (role) format
+    if(!role && t.includes('(')){ role=t.split('(')[1].replace(')','').trim().toLowerCase(); }
+    return {name:name, role:role, raw:t.toLowerCase()};
   }
-  function currentRole(){
-    let who=document.getElementById('whoLine');
-    let t=(who?who.innerText:'').toLowerCase();
-    if(t.includes('secretary')||t.includes('admin')) return 'secretary';
-    if(t.includes('overseer')) return 'overseer';
-    if(t.includes('assistant')) return 'assistant';
-    return 'publisher';
-  }
+
   function myGroupFor(name){
-    // 1. Is he Overseer/Assistant of a group?
     let groups=getGroups();
-    let g=groups.find(x=> x.overseer===name || x.assistant===name);
+    // Exact match first
+    let g=groups.find(x=> x.overseer && x.overseer.trim().toLowerCase()===name.toLowerCase());
     if(g) return g.group;
-    // 2. Is he a member assigned to a group?
-    let mg=getMemberGroups();
-    if(mg[name]) return mg[name];
+    g=groups.find(x=> x.assistant && x.assistant.trim().toLowerCase()===name.toLowerCase());
+    if(g) return g.group;
     return null;
   }
 
-  // --- 1. SECRETARY: Assign Members to Group ---
-  function addAssignBox(){
-    let tab=document.getElementById('tab-groups');
-    if(!tab || document.getElementById('assignMembersBox')) return;
-    // Only Secretary sees this
-    if(currentRole()!=='secretary') return;
-    let box=document.createElement('div');
-    box.id='assignMembersBox';
-    box.className='card';
-    box.style.cssText='background:#fefce8;border:2px solid #eab308';
-    box.innerHTML=`
-      <b>👥 Assign Members to Groups (Secretary Only - Do Once)</b><br>
-      <span class="small">1. Choose Group below &nbsp; 2. Tick members &nbsp; 3. Tap Save Members. Then Overseer will see only his Group's S-21s.</span><br>
-      <label>Choose Group</label>
-      <select id="assignGroupSelect" style="width:100%;padding:12px">
-        <option value="">-- Choose Group --</option>
-      </select>
-      <div id="assignMembersList" style="max-height:300px;overflow:auto;border:1px solid #e5e7eb;border-radius:10px;padding:8px;margin-top:8px">
-        <p class="small">Open All S-21s once to load names, then come back here.</p>
-      </div>
-      <button class="btn-green" style="width:100%;margin-top:10px" onclick="saveAssignMembers()">💾 Save Members to Group</button>
-      <p id="assignStatus" class="small"></p>
-    `;
-    tab.appendChild(box);
-    refreshAssignBox();
+  // S-21 card contains Group like: "Group: Group 1" or "Group 1" or "Group: 1"
+  function groupOfCard(card){
+    let txt=card.innerText||'';
+    // Try patterns
+    let m=txt.match(/Group\s*[:\-]?\s*(Group\s*\d+|\d+)/i);
+    if(m){
+      let num=m[1].replace(/group/i,'').trim();
+      return 'Group '+num;
+    }
+    return null;
   }
 
-  window.refreshAssignBox=function(){
-    let sel=document.getElementById('assignGroupSelect');
-    let list=document.getElementById('assignMembersList');
-    if(!sel || !list) return;
-    let groups=getGroups();
-    let mg=getMemberGroups();
-    // Fill groups dropdown
-    sel.innerHTML='<option value="">-- Choose Group --</option>' + groups.map(g=>`<option value="${g.group}">${g.group} - Overseer: ${g.overseer}</option>`).join('');
-    // Collect names from S-21 list
-    let names=new Set();
-    document.querySelectorAll('#s21List .pubCard b, #s21List .card b').forEach(b=>{
-      let n=b.innerText.trim();
-      if(n.length>2 && n.length<45 && !n.toLowerCase().includes('group') && !n.toLowerCase().includes('s-21')) names.add(n);
-    });
-    let arr=Array.from(names).sort();
-    if(arr.length===0){
-      list.innerHTML='<p class="small">No names yet. Go to All S-21s, wait 3 sec, come back.</p>';
-      return;
+  // Also try to read from stored S-21 data if card has no group text
+  function groupFromStorage(name){
+    // Try all possible S-21 keys
+    let keys=['chipunka_s21','chipunka_s21_list','chipunka_publishers','s21'];
+    for(let k of keys){
+      try{
+        let arr=JSON.parse(localStorage.getItem(k)||'[]');
+        if(Array.isArray(arr)){
+          let found=arr.find(x=> (x.name||x.publisher||'') .toLowerCase()===name.toLowerCase());
+          if(found && found.group) return found.group.includes('Group')? found.group : 'Group '+found.group;
+          if(found && found.grp) return 'Group '+found.grp;
+        }
+      }catch(e){}
     }
-    list.innerHTML=arr.map(n=>{
-      let g=mg[n]||'';
-      let checked = sel.value && g===sel.value ? 'checked' : '';
-      return `<label style="display:block;padding:8px;border-bottom:1px solid #f1f5f9"><input type="checkbox" class="assignChk" data-name="${n}" ${checked} style="margin-right:8px"> ${n} <span class="small" style="color:#64748b">${g? ' - '+g : ''}</span></label>`;
-    }).join('');
-    // When group changes, re-check
-    sel.onchange=()=>refreshAssignBox();
-  };
+    return null;
+  }
 
-  window.saveAssignMembers=function(){
-    let sel=document.getElementById('assignGroupSelect');
-    if(!sel || !sel.value){ alert('Choose Group first'); return; }
-    let group=sel.value;
-    let mg=getMemberGroups();
-    // First remove all members from this group, then add ticked
-    Object.keys(mg).forEach(k=>{ if(mg[k]===group) delete mg[k]; });
-    let count=0;
-    document.querySelectorAll('.assignChk:checked').forEach(chk=>{
-      mg[chk.dataset.name]=group;
-      count++;
-    });
-    setK('chipunka_member_groups', mg);
-    document.getElementById('assignStatus').innerText='✅ Saved '+count+' members to '+group+'. Now Overseer of '+group+' will see only these S-21s.';
-    alert('✅ Saved '+count+' members to '+group);
-    refreshAssignBox();
-  };
-
-  // --- 2. OVERSEER: Filter S-21 List to His Group Only ---
-  let s21Filtered=false;
-  function filterS21ForOverseer(){
+  function filterS21(){
     let tab=document.getElementById('tab-s21');
     if(!tab || tab.classList.contains('hidden')) return;
-    let role=currentRole();
-    if(role==='secretary') {
-      // Secretary sees all, remove banner if exists
+    let me=currentUser();
+    // Secretary / Admin sees ALL - do nothing
+    if(me.raw.includes('secretary') || me.raw.includes('admin')){
       let b=document.getElementById('overseerBanner');
       if(b) b.remove();
+      // Unhide all for secretary
+      document.querySelectorAll('#s21List .pubCard, #s21List .card').forEach(c=>{ c.style.display=''; });
       return;
     }
-    let me=currentUserName();
-    let myGroup=myGroupFor(me);
+    // Only Overseer / Assistant get filtered
+    if(!me.raw.includes('overseer') && !me.raw.includes('assistant')) return;
+    let myGroup=myGroupFor(me.name);
     if(!myGroup) return;
-    // Show banner
+
+    // Banner
     if(!document.getElementById('overseerBanner')){
       let banner=document.createElement('div');
       banner.id='overseerBanner';
       banner.className='card';
       banner.style.cssText='background:#dcfce7;border:2px solid #22c55e';
-      banner.innerHTML=`<b>👥 Showing ${myGroup} Only</b><br><span class="small">You are Overseer/Assistant of ${myGroup}. You see only your Group's S-21s. Total members: <b id="myGroupCount">...</b></span><br><button class="btn-blue" onclick="document.getElementById('overseerBanner').remove();">Show All (Temporary)</button>`;
+      banner.innerHTML=`<b>👥 ${myGroup} - Your Group S-21s</b><br><span class="small">Hello ${me.name}, Overseer of ${myGroup}. Showing only publishers in ${myGroup} (from their S-21 Group). Members: <b id="myGroupCount">...</b></span>`;
       tab.prepend(banner);
     }
-    // Hide cards not in my group
-    let mg=getMemberGroups();
+
     let shown=0;
     document.querySelectorAll('#s21List .pubCard, #s21List .card').forEach(card=>{
       let b=card.querySelector('b');
       if(!b) return;
-      let n=b.innerText.trim();
-      let g=mg[n] || '';
-      // Also if S-21 card itself says Group, use that
-      let cardText=card.innerText||'';
-      let cardHasGroup = cardText.includes(myGroup);
-      if(g===myGroup || cardHasGroup){
+      let name=b.innerText.trim();
+      let g=groupOfCard(card) || groupFromStorage(name);
+      if(!g){
+        // If S-21 has NO group saved, hide for overseer - it must be edited to add group
+        card.style.display='none';
+        return;
+      }
+      // Normalize: "Group 1" vs "1"
+      let normG=g.replace(/group/i,'').trim();
+      let normMine=myGroup.replace(/group/i,'').trim();
+      if(normG===normMine){
         card.style.display='';
         shown++;
       } else {
-        // If member not assigned to any group yet, hide for overseer
         card.style.display='none';
       }
     });
     let c=document.getElementById('myGroupCount');
     if(c) c.innerText=shown;
+    // If 0 shown, show help
+    if(shown===0 && !document.getElementById('noGroupHelp')){
+      let p=document.createElement('p');
+      p.id='noGroupHelp';
+      p.className='small';
+      p.style.cssText='background:#fef9c3;padding:10px;border-radius:10px';
+      p.innerText='No S-21s found for '+myGroup+'. That means when S-21s were entered, Group was not selected, or Group name does not match. Ask Secretary to open an S-21, select Group = '+myGroup+', and Save. Then it will appear here.';
+      document.getElementById('s21List').prepend(p);
+    } else {
+      let h=document.getElementById('noGroupHelp');
+      if(h && shown>0) h.remove();
+    }
+  }
+
+  // Also make sure S-21 form keeps Group dropdown - if it's text, convert to select Group 1-10
+  function fixS21GroupField(){
+    // Find S-21 group input - common ids from old codes
+    let ids=['s21Group','pubGroup','s21Grp','groupInput'];
+    ids.forEach(id=>{
+      let el=document.getElementById(id);
+      if(el && el.tagName==='INPUT'){
+        let s=document.createElement('select');
+        s.id=id;
+        s.style.cssText='width:100%;padding:12px;margin:6px 0';
+        s.innerHTML='<option value="">-- Select Group --</option>' + [1,2,3,4,5,6,7,8,9,10].map(i=>`<option value="Group ${i}">Group ${i}</option>`).join('');
+        el.replaceWith(s);
+      }
+    });
   }
 
   setInterval(()=>{
-    addAssignBox();
-    filterS21ForOverseer();
-  }, 1500);
+    fixS21GroupField();
+    filterS21();
+  }, 1200);
 })();
 </script></body></html>
