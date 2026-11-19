@@ -571,4 +571,276 @@ setInterval(()=>{checkCleaningNotify(); if(!currentUser) return; let now=new Dat
   setInterval(applyFix, 500);
   document.addEventListener('click', ()=>{ setTimeout(applyFix, 300); });
 })();
+</script><script>
+// === BOTTOM ADD - Daily Text + Donations + Gallery + Group Overseer ===
+(function(){
+  // ---------- STORAGE ----------
+  function getK(k,d){ try{ return JSON.parse(localStorage.getItem(k)||JSON.stringify(d)); }catch(e){ return d; } }
+  function setK(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+
+  // ---------- 1. CREATE TABS ----------
+  function createTabs(){
+    if(document.getElementById('tab-daily')) return;
+    let app=document.getElementById('appScreen');
+    if(!app) return;
+    let html=`
+    <div id="tab-daily" class="card hidden">
+      <h3>📖 Daily Text - Chipunka</h3>
+      <div id="dailyToday" class="card" style="background:#fef9c3"></div>
+      <div id="dailyForm" class="card" style="background:#eff6ff">
+        <b>Add Daily Text - Secretary + Appointed Only</b><br>
+        <label>Date</label><input id="dailyDate" type="date">
+        <label>Scripture</label><input id="dailyScript" placeholder="e.g. Psalm 23:1">
+        <label>Text</label><input id="dailyTextIn" placeholder="e.g. Jehovah is my Shepherd...">
+        <button class="btn-green" onclick="addDailyText()">➕ Add Daily Text</button>
+      </div>
+      <div id="dailyList"></div>
+    </div>
+    <div id="tab-donate" class="card hidden">
+      <h3>💰 Donations / Contributions</h3>
+      <div class="card" style="background:#f0fdf4"><b>Total This Month: <span id="donTotal">K0</span></b><br><span class="small">Only Secretary can see names. Publishers see only total.</span></div>
+      <div id="donForm" class="card" style="background:#eff6ff">
+        <b>Add Contribution - Secretary Only</b><br>
+        <label>Publisher Name</label><input id="donName" placeholder="e.g. John Sakala">
+        <label>Amount (K)</label><input id="donAmt" type="number" placeholder="e.g. 100">
+        <label>Date</label><input id="donDate" type="date">
+        <label>Purpose</label><select id="donPurpose"><option>Kingdom Hall</option><option>Convention</option><option>Other</option></select>
+        <button class="btn-green" onclick="addDonation()">➕ Add Donation</button>
+      </div>
+      <div id="donList"></div>
+    </div>
+    <div id="tab-gallery" class="card hidden">
+      <h3>📸 Gallery - Chipunka Events</h3>
+      <div id="galForm" class="card" style="background:#eff6ff">
+        <b>Upload Photo - Secretary + Appointed Only</b><br>
+        <label>Title</label><input id="galTitle" placeholder="e.g. Memorial 2026">
+        <label>Photo</label><input type="file" id="galFile" accept="image/*">
+        <button class="btn-blue" onclick="addGallery()">📤 Upload Photo</button>
+      </div>
+      <div id="galList" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+    </div>
+    <div id="tab-groups" class="card hidden">
+      <h3>👥 Field Service Groups - Overseer + Assistant</h3>
+      <p class="small">Secretary sets who is Overseer / Assistant for each Group. That person will see ALL S-21s for his group only.</p>
+      <div id="groupForm" class="card" style="background:#eff6ff">
+        <label>Group Name</label><input id="grpName" placeholder="e.g. Group 1">
+        <label>Overseer Name</label><input id="grpOver" placeholder="e.g. John Sakala - must match S-21 name">
+        <label>Assistant Name</label><input id="grpAsst" placeholder="e.g. Peter Banda">
+        <button class="btn-green" onclick="saveGroup()">💾 Save Group Overseer</button>
+      </div>
+      <div id="groupList"></div>
+    </div>`;
+    // Insert before footer help
+    let footer=document.querySelector('.footerHelp');
+    if(footer) footer.insertAdjacentHTML('beforebegin', html);
+    else app.insertAdjacentHTML('beforeend', html);
+  }
+
+  // ---------- 2. ADD BUTTONS ----------
+  function addButtons(){
+    // Home buttons
+    let home=document.getElementById('tab-home');
+    if(home && !document.getElementById('btn-daily')){
+      let grid=home.querySelector('.homeGrid');
+      if(grid){
+        grid.insertAdjacentHTML('beforeend',
+        '<button id="btn-daily" class="btn-blue" onclick="showTabX(\'daily\')">📖<br>Daily Text</button>'+
+        '<button id="btn-donate" onclick="showTabX(\'donate\')">💰<br>Donations</button>'+
+        '<button id="btn-gallery" onclick="showTabX(\'gallery\')">📸<br>Gallery</button>'+
+        '<button id="btn-groups" onclick="showTabX(\'groups\')">👥<br>My Group</button>');
+      }
+    }
+    // Side menu buttons - add if menu exists
+    let menu=document.getElementById('sideMenu');
+    if(menu && !document.getElementById('tabBtn-daily')){
+      menu.insertAdjacentHTML('beforeend',
+      '<button id="tabBtn-daily" onclick="showTabX(\'daily\')">📖 Daily Text</button>'+
+      '<button id="tabBtn-donate" onclick="showTabX(\'donate\')">💰 Donations</button>'+
+      '<button id="tabBtn-gallery" onclick="showTabX(\'gallery\')">📸 Gallery</button>'+
+      '<button id="tabBtn-groups" onclick="showTabX(\'groups\')">👥 My Group</button>');
+    }
+  }
+
+  // ---------- 3. NAV ----------
+  window.showTabX=function(t){
+    // Hide all tabs
+    document.querySelectorAll('[id^="tab-"]').forEach(el=>el.classList.add('hidden'));
+    let el=document.getElementById('tab-'+t);
+    if(el) el.classList.remove('hidden');
+    let m=document.getElementById('sideMenu'); if(m) m.classList.add('hidden');
+    let dm=document.getElementById('dotMenu'); if(dm) dm.classList.add('hidden');
+    if(t==='daily') renderDaily();
+    if(t==='donate') renderDonate();
+    if(t==='gallery') renderGallery();
+    if(t==='groups') renderGroups();
+    window.scrollTo(0,0);
+  };
+
+  function isLeader2(){
+    let u=document.getElementById('tabBtn-users');
+    if(u && u.style.display==='none') return false;
+    let w=document.getElementById('whoLine');
+    if(w && w.innerText.includes('publisher')) return false;
+    return true;
+  }
+  function myName(){
+    let w=document.getElementById('whoLine');
+    if(!w) return '';
+    // "Logged in as: John Sakala (JOHN01 - publisher)"
+    let txt=w.innerText||'';
+    let m=txt.match(/Logged in as:\s*(.+?)\s*\(/);
+    return m?m[1].trim():'';
+  }
+  function isSecretary(){
+    let w=document.getElementById('whoLine');
+    return w && w.innerText.includes('secretary');
+  }
+
+  // ---------- 4. DAILY TEXT ----------
+  window.addDailyText=function(){
+    if(!isLeader2()){ alert('Only Secretary + Appointed'); return; }
+    let d=document.getElementById('dailyDate').value || new Date().toISOString().slice(0,10);
+    let s=document.getElementById('dailyScript').value.trim();
+    let tx=document.getElementById('dailyTextIn').value.trim();
+    if(!s||!tx){ alert('Scripture + Text required'); return; }
+    let arr=getK('chipunka_daily',[]);
+    arr.unshift({date:d,script:s,text:tx});
+    setK('chipunka_daily',arr);
+    document.getElementById('dailyScript').value=''; document.getElementById('dailyTextIn').value='';
+    renderDaily(); alert('✅ Daily Text Added');
+  };
+  window.renderDaily=function(){
+    let arr=getK('chipunka_daily',[]);
+    let today=new Date().toISOString().slice(0,10);
+    let tod=arr.find(x=>x.date===today) || arr[0];
+    let t=document.getElementById('dailyToday');
+    if(t) t.innerHTML = tod ? `<b>📖 Today - ${tod.date}</b><br><b style="font-size:18px">${tod.script}</b><br>${tod.text}` : '<p>No Daily Text yet. Secretary will add.</p>';
+    let f=document.getElementById('dailyForm');
+    if(f) f.style.display = isLeader2() ? 'block' : 'none';
+    let l=document.getElementById('dailyList');
+    if(l) l.innerHTML = arr.map((x,i)=>`<div class="card">📖 <b>${x.date} - ${x.script}</b><br>${x.text} ${isLeader2()?`<br><button class="btn-red" onclick="delDaily(${i})">Delete</button>`:''}</div>`).join('') || '<p class="small">No daily texts yet</p>';
+  };
+  window.delDaily=function(i){ let a=getK('chipunka_daily',[]); a.splice(i,1); setK('chipunka_daily',a); renderDaily(); };
+
+  // ---------- 5. DONATIONS ----------
+  window.addDonation=function(){
+    if(!isSecretary()){ alert('Only Secretary can add donations'); return; }
+    let n=document.getElementById('donName').value.trim();
+    let amt=+document.getElementById('donAmt').value||0;
+    let d=document.getElementById('donDate').value || new Date().toISOString().slice(0,10);
+    let p=document.getElementById('donPurpose').value;
+    if(!n||!amt){ alert('Name + Amount required'); return; }
+    let arr=getK('chipunka_donate',[]);
+    arr.unshift({name:n,amt:amt,date:d,purpose:p});
+    setK('chipunka_donate',arr);
+    renderDonate(); alert('✅ Donation Saved');
+  };
+  window.renderDonate=function(){
+    let arr=getK('chipunka_donate',[]);
+    let total=arr.reduce((a,x)=>a+x.amt,0);
+    let tt=document.getElementById('donTotal'); if(tt) tt.innerText='K'+total;
+    let f=document.getElementById('donForm'); if(f) f.style.display = isSecretary() ? 'block' : 'none';
+    let l=document.getElementById('donList');
+    if(!l) return;
+    if(isSecretary()){
+      l.innerHTML=arr.map((x,i)=>`<div class="card">💰 <b>${x.name}</b> - K${x.amt} - ${x.date} - ${x.purpose} <button class="btn-red" onclick="delDon(${i})">Delete</button></div>`).join('')||'<p>No donations yet</p>';
+    } else {
+      // Publishers see only total + their own? Show count only for privacy
+      l.innerHTML=`<div class="card" style="background:#fef9c3"><b>Thank you for your contributions!</b><br>Total contributions recorded: <b>${arr.length}</b><br>Your kindness supports the Kingdom Hall.</div>`;
+    }
+  };
+  window.delDon=function(i){ let a=getK('chipunka_donate',[]); a.splice(i,1); setK('chipunka_donate',a); renderDonate(); };
+
+  // ---------- 6. GALLERY ----------
+  window.addGallery=function(){
+    if(!isLeader2()){ alert('Only Secretary + Appointed'); return; }
+    let title=document.getElementById('galTitle').value.trim()||'Chipunka';
+    let f=document.getElementById('galFile').files[0];
+    if(!f){ alert('Choose a photo'); return; }
+    let r=new FileReader();
+    r.onload=function(ev){
+      // Compress
+      let img=new Image();
+      img.onload=function(){
+        let c=document.createElement('canvas');
+        let max=800; let w=img.width, h=img.height;
+        if(w>max){ h=h*max/w; w=max; }
+        c.width=w; c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        let small=c.toDataURL('image/jpeg',0.7);
+        let arr=getK('chipunka_gallery',[]);
+        arr.unshift({title:title,data:small,date:new Date().toLocaleDateString()});
+        setK('chipunka_gallery',arr);
+        document.getElementById('galTitle').value=''; document.getElementById('galFile').value='';
+        renderGallery(); alert('✅ Photo Uploaded');
+      };
+      img.src=ev.target.result;
+    };
+    r.readAsDataURL(f);
+  };
+  window.renderGallery=function(){
+    let arr=getK('chipunka_gallery',[]);
+    let f=document.getElementById('galForm'); if(f) f.style.display = isLeader2() ? 'block' : 'none';
+    let l=document.getElementById('galList');
+    if(l) l.innerHTML = arr.map((x,i)=>`<div class="card" style="width:150px;text-align:center"><img src="${x.data}" style="width:100%;height:120px;object-fit:cover;border-radius:10px"><br><b>${x.title}</b><br><span class="small">${x.date}</span> ${isLeader2()?`<br><button class="btn-red" onclick="delGal(${i})">Delete</button>`:''}</div>`).join('') || '<p>No photos yet</p>';
+  };
+  window.delGal=function(i){ let a=getK('chipunka_gallery',[]); a.splice(i,1); setK('chipunka_gallery',a); renderGallery(); };
+
+  // ---------- 7. GROUPS - OVERSEER + ASSISTANT ----------
+  window.saveGroup=function(){
+    if(!isSecretary() && !isLeader2()){ alert('Only Secretary + Appointed'); return; }
+    let g=document.getElementById('grpName').value.trim();
+    let o=document.getElementById('grpOver').value.trim();
+    let a=document.getElementById('grpAsst').value.trim();
+    if(!g||!o){ alert('Group + Overseer required'); return; }
+    let arr=getK('chipunka_groups',[]);
+    let ex=arr.find(x=>x.group.toLowerCase()===g.toLowerCase());
+    if(ex){ ex.overseer=o; ex.assistant=a; } else arr.push({group:g,overseer:o,assistant:a});
+    setK('chipunka_groups',arr);
+    renderGroups(); alert('✅ Saved - '+o+' is now Overseer of '+g);
+  };
+  window.renderGroups=function(){
+    let arr=getK('chipunka_groups',[]);
+    let f=document.getElementById('groupForm'); if(f) f.style.display = isLeader2() ? 'block' : 'none';
+    let me=myName().toLowerCase();
+    let myGroups=arr.filter(g=> g.overseer.toLowerCase()===me || g.assistant.toLowerCase()===me);
+    let l=document.getElementById('groupList');
+    if(!l) return;
+    let html='';
+    if(myGroups.length){
+      html+=`<div class="card" style="background:#f0fdf4"><b>👥 MY GROUP(S)</b><br>`+myGroups.map(g=>`You are <b>${g.overseer.toLowerCase()===me?'Overseer':'Assistant'}</b> of <b>${g.group}</b>`).join('<br>')+`<br><span class="small">Go to All S-21s - you will see only your group members.</span><br><button class="btn-blue" onclick="showTab('s21')">📄 View My Group S-21s</button></div>`;
+    } else if(!isLeader2()){
+      html+=`<div class="card" style="background:#fef9c3">You are not an Overseer / Assistant yet. Secretary will assign you.</div>`;
+    }
+    html+=arr.map((g,i)=>`<div class="card"><b>${g.group}</b><br>Overseer: <b>${g.overseer}</b><br>Assistant: <b>${g.assistant||'-'}</b> ${isLeader2()?`<br><button class="btn-red" onclick="delGroup(${i})">Delete</button>`:''}</div>`).join('');
+    l.innerHTML=html||'<p>No groups yet</p>';
+  };
+  window.delGroup=function(i){ let a=getK('chipunka_groups',[]); a.splice(i,1); setK('chipunka_groups',a); renderGroups(); };
+
+  // ---------- 8. FILTER S-21s FOR OVERSEER ----------
+  function filterS21ForOverseer(){
+    let me=myName().toLowerCase();
+    if(!me) return;
+    if(isLeader2()) return; // Secretary/Appointed see all anyway
+    let groups=getK('chipunka_groups',[]);
+    let myGroups=groups.filter(g=> g.overseer.toLowerCase()===me || g.assistant.toLowerCase()===me);
+    if(!myGroups.length) return; // Not overseer - keep normal (own S-21 only)
+    let myGroupNames=myGroups.map(g=>g.group.toLowerCase());
+    // Cards are .pubCard in #s21List
+    let cards=document.querySelectorAll('#s21List .pubCard, #s21List .card');
+    cards.forEach(card=>{
+      let txt=(card.innerText||'').toLowerCase();
+      // Card shows "Group: Group 1"
+      let show=myGroupNames.some(gn=> txt.includes(gn));
+      // Also show self if not in group
+      if(txt.includes(me)) show=true;
+      if(!show) card.style.display='none'; else card.style.display='block';
+    });
+  }
+
+  // ---------- INIT ----------
+  setInterval(()=>{
+    createTabs(); addButtons(); filterS21ForOverseer();
+  }, 800);
+})();
 </script></body></html>
