@@ -1506,127 +1506,111 @@ setInterval(()=>{checkCleaningNotify(); if(!currentUser) return; let now=new Dat
     filterS21();
   }, 1200);
 })();
-</script><script>
-// === FIX 6 ULTRA - No Waiting - Finds Form By Heading ===
+  <script>
+// === FIX 6 ULTRA V2 - ONLY Groups Tab, NEVER Login ===
 (function(){
-  function findForm(){
-    // Find by heading text, not by ID - your tab ID might be different
-    let heads=[...document.querySelectorAll('h1,h2,h3,b,div')].find(el=> (el.innerText||'').includes('Field Service Groups'));
-    if(!heads) return null;
-    let box=heads.closest('div');
-    // Walk up until we find the 3 inputs
-    let el=heads;
-    for(let i=0;i<6;i++){
-      el=el.parentElement;
-      if(!el) break;
-      if(el.querySelectorAll('input,select').length>=3) return el;
+  // 1. EMERGENCY REPAIR - If Login Password was turned into a Select, fix it back
+  function repairLogin(){
+    let loginTab=document.getElementById('tab-login');
+    if(!loginTab) return;
+    // Password field should be INPUT type=password, not SELECT
+    let bad=loginTab.querySelector('select#grpOver, select#grpAsst');
+    if(bad){
+      let inp=document.createElement('input');
+      inp.type='password';
+      inp.placeholder='Password';
+      inp.id=bad.id==='grpOver' ? 'loginPass' : 'loginPass2';
+      inp.style.cssText='width:100%;padding:12px;margin:6px 0;font-size:16px;background:#fff;border:1px solid #cbd5e1;border-radius:10px';
+      bad.replaceWith(inp);
     }
-    return box;
+    // Remove Group buttons that were wrongly added to Login
+    let wrongBtns=loginTab.querySelector('#grpQuickBtnsULTRA');
+    if(wrongBtns) wrongBtns.remove();
   }
 
   function collectNames(){
     let names=new Set();
-    // Try EVERYWHERE - S-21 list, any card, any b
-    document.querySelectorAll('.pubCard b, .card b, #s21List b').forEach(b=>{
+    document.querySelectorAll('#s21List .pubCard b, #s21List .card b, #s21List b').forEach(b=>{
       let n=b.innerText.trim();
       if(n.length>2 && n.length<45 && !n.toLowerCase().includes('group') && !n.toLowerCase().includes('s-21') && !n.toLowerCase().includes('field service')) names.add(n);
     });
-    // Also from localStorage - try ALL keys
-    Object.keys(localStorage).forEach(k=>{
-      try{
-        let v=JSON.parse(localStorage.getItem(k)||'');
-        if(Array.isArray(v)) v.forEach(x=>{
-          if(x && (x.name||x.publisher)) names.add(x.name||x.publisher);
-          if(x && x.overseer) names.add(x.overseer);
-          if(x && x.assistant) names.add(x.assistant);
-        });
-      }catch(e){}
-    });
+    try{
+      let arr=JSON.parse(localStorage.getItem('chipunka_groups')||'[]');
+      arr.forEach(x=>{ if(x.overseer) names.add(x.overseer); if(x.assistant) names.add(x.assistant); });
+    }catch(e){}
     return Array.from(names).sort();
   }
 
-  let done=false;
-  let lastCount=0;
-
+  let lastCount=-1;
   function run(){
-    let form=findForm();
-    if(!form){
-      return;
-    }
-    let inputs=form.querySelectorAll('input, select');
-    if(inputs.length<3) return;
+    repairLogin();
 
-    // Your form order in screenshot: 0=Group Name, 1=Overseer, 2=Assistant
+    // 2. ONLY run on Groups Tab, and ONLY when it is VISIBLE
+    let tab=document.getElementById('tab-groups');
+    if(!tab) return;
+    if(tab.classList.contains('hidden') || tab.style.display==='none') return;
+    if(tab.offsetParent===null) return; // hidden
+
+    let inputs=tab.querySelectorAll('input, select');
+    // Groups form has exactly: Group Name, Overseer, Assistant = 3 inputs
+    // If we find more, take first 3
+    if(inputs.length<3) return;
     let groupEl=inputs[0], overEl=inputs[1], asstEl=inputs[2];
 
-    // Convert Overseer - even if names = 0, convert NOW
+    // Safety: Do NOT touch if this looks like Login (placeholder has Password / Your ID)
+    if((groupEl.placeholder||'').toLowerCase().includes('password')) return;
+    if((groupEl.placeholder||'').toLowerCase().includes('your id')) return;
+
+    // Convert ONLY these 2
     if(overEl.tagName!=='SELECT'){
       let s=document.createElement('select');
       s.id='grpOver';
       s.style.cssText='width:100%;padding:12px;margin:6px 0;font-size:16px;background:#fff;border:2px solid #22c55e;border-radius:10px';
-      overEl.replaceWith(s);
-      overEl=s;
+      overEl.replaceWith(s); overEl=s;
     }
     if(asstEl.tagName!=='SELECT'){
       let s=document.createElement('select');
       s.id='grpAsst';
       s.style.cssText='width:100%;padding:12px;margin:6px 0;font-size:16px;background:#fff;border:2px solid #22c55e;border-radius:10px';
-      asstEl.replaceWith(s);
-      asstEl=s;
+      asstEl.replaceWith(s); asstEl=s;
     }
 
-    // Fill names - if new names found, refill
     let names=collectNames();
     if(names.length!==lastCount){
       lastCount=names.length;
-      let overVal=overEl.value;
-      let asstVal=asstEl.value;
+      let ov=overEl.value, av=asstEl.value;
       overEl.innerHTML='<option value="">-- Select Overseer ('+names.length+' names) --</option>' + names.map(n=>`<option value="${n}">${n}</option>`).join('');
       asstEl.innerHTML='<option value="">-- Select Assistant ('+names.length+' names) --</option>' + names.map(n=>`<option value="${n}">${n}</option>`).join('');
-      if(overVal) overEl.value=overVal;
-      if(asstVal) asstEl.value=asstVal;
+      if(ov) overEl.value=ov;
+      if(av) asstEl.value=av;
     }
 
-    // Add Group 1-10 buttons ONCE
-    if(!document.getElementById('grpQuickBtnsULTRA')){
+    if(!document.getElementById('grpQuickBtnsULTRA2') && groupEl){
       let div=document.createElement('div');
-      div.id='grpQuickBtnsULTRA';
+      div.id='grpQuickBtnsULTRA2';
       div.style.cssText='display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;padding:10px;background:#f8fafc;border-radius:10px';
-      div.innerHTML=[1,2,3,4,5,6,7,8,9,10].map(i=>`<button type="button" class="btn-gray" style="padding:6px 10px" onclick="document.getElementById('grpOver').closest('div').querySelector('input').value='Group ${i}'">Group ${i}</button>`).join('');
+      div.innerHTML=[1,2,3,4,5,6,7,8,9,10].map(i=>`<button type="button" class="btn-gray" style="padding:6px 10px" onclick="document.getElementById('tab-groups').querySelector('input').value='Group ${i}'">Group ${i}</button>`).join('');
       groupEl.after(div);
     }
 
-    // Patch Save ONCE
-    let saveBtn=[...form.querySelectorAll('button')].find(b=> b.innerText.includes('Save Group'));
-    if(saveBtn && !saveBtn.dataset.ultra){
-      saveBtn.dataset.ultra='1';
+    let saveBtn=[...tab.querySelectorAll('button')].find(b=> b.innerText.includes('Save Group'));
+    if(saveBtn && !saveBtn.dataset.ultra2){
+      saveBtn.dataset.ultra2='1';
       saveBtn.onclick=function(){
-        let fForm=findForm();
-        let ins=fForm.querySelectorAll('input, select');
-        let g=ins[0].value.trim();
-        let o=ins[1].value.trim();
-        let a=ins[2].value.trim();
+        let ins=document.getElementById('tab-groups').querySelectorAll('input, select');
+        let g=ins[0].value.trim(), o=ins[1].value.trim(), a=ins[2].value.trim();
         if(!g||!o){ alert('Please select Group + Overseer'); return; }
         if(o===a && a!==''){ alert('Overseer and Assistant cannot be same'); return; }
         let arr=JSON.parse(localStorage.getItem('chipunka_groups')||'[]');
         let ex=arr.find(x=>x.group.toLowerCase()===g.toLowerCase());
         if(ex){ ex.overseer=o; ex.assistant=a; } else arr.push({group:g,overseer:o,assistant:a});
         localStorage.setItem('chipunka_groups', JSON.stringify(arr));
-        alert('✅ Saved - '+o+' is Overseer of '+g+'\nAssistant: '+(a||'None'));
-        // Show saved list
-        let old=document.getElementById('groupsSavedULTRA');
-        if(old) old.remove();
-        let div=document.createElement('div');
-        div.id='groupsSavedULTRA';
-        div.className='card';
-        div.style.cssText='background:#f0fdf4;margin-top:10px';
-        div.innerHTML='<b>✅ Saved Groups:</b><br>' + arr.map(x=>`👥 <b>${x.group}</b> - ${x.overseer} | Asst: ${x.assistant||'None'}`).join('<br>');
-        fForm.appendChild(div);
+        alert('✅ Saved - '+o+' is Overseer of '+g);
       };
     }
   }
 
-  // Run every 1 sec, keep filling names as they load
   setInterval(run, 1000);
 })();
+</script>
 </script></body></html>
