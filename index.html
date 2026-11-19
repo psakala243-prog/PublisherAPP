@@ -1004,4 +1004,150 @@ setInterval(()=>{checkCleaningNotify(); if(!currentUser) return; let now=new Dat
     }
   }, 1000);
 })();
+</script><script>
+// === FIX 4 - REPAIR Daily Text PDF Upload + Auto ===
+(function(){
+  function getK(k,d){ try{ return JSON.parse(localStorage.getItem(k)||JSON.stringify(d)); }catch(e){ return d; } }
+  function setK(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+
+  // Load PDF.js if missing
+  if(!window.pdfjsLib){
+    let s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    document.head.appendChild(s);
+  }
+
+  // --- 1. FORCE CREATE UPLOAD BOX - Always visible ---
+  function forcePdfBox(){
+    let tab=document.getElementById('tab-daily');
+    if(!tab) return;
+    if(document.getElementById('dailyPdfBox')) return;
+    let box=document.createElement('div');
+    box.id='dailyPdfBox';
+    box.className='card';
+    box.style.cssText='background:#e0f2fe;border:2px solid #0284c7;display:block !important';
+    box.innerHTML=`
+      <b>📄 AUTOMATIC Daily Text - Upload PDF Here</b><br>
+      <span class="small">Secretary: Upload Examining Scriptures PDF ONCE. Then Daily Text shows automatically every day.</span><br>
+      <span class="small" id="dailyPdfStatus2">${getK('chipunka_daily_pdf_name','No PDF yet - Please upload')}</span><br><br>
+      <label>Choose PDF File</label>
+      <input type="file" id="dailyPdfFile2" accept=".pdf">
+      <button class="btn-blue" style="width:100%;margin-top:8px" onclick="uploadDailyPdf2()">📤 Upload & Read PDF Now</button>
+      <button class="btn-gray" style="width:100%;margin-top:6px" onclick="clearDailyPdf2()">🗑️ Remove PDF</button>
+    `;
+    // Put at VERY TOP of Daily Text tab
+    tab.prepend(box);
+  }
+
+  // --- 2. UPLOAD FUNCTION - New name so it doesn't clash ---
+  window.uploadDailyPdf2=async function(){
+    let inp=document.getElementById('dailyPdfFile2');
+    let f=inp && inp.files[0];
+    if(!f){ alert('Please choose PDF first'); return; }
+    let st=document.getElementById('dailyPdfStatus2');
+    if(st) st.innerText='⏳ Reading PDF... Wait 15-30 seconds, do not close...';
+    try{
+      // Wait for pdfjsLib
+      let tries=0;
+      while(!window.pdfjsLib && tries<20){ await new Promise(r=>setTimeout(r,500)); tries++; }
+      if(!window.pdfjsLib){ alert('PDF reader not loaded. Check internet and try again.'); return; }
+      let buf=await f.arrayBuffer();
+      let pdf=await pdfjsLib.getDocument({data:buf}).promise;
+      let allText='';
+      for(let i=1;i<=pdf.numPages;i++){
+        let page=await pdf.getPage(i);
+        let tc=await page.getTextContent();
+        let txt=tc.items.map(it=>it.str).join(' ');
+        allText += '\n---PAGE '+i+'---\n' + txt;
+        if(st) st.innerText='⏳ Reading page '+i+' / '+pdf.numPages+'...';
+      }
+      setK('chipunka_daily_pdf_text', allText);
+      setK('chipunka_daily_pdf_name', f.name);
+      if(st) st.innerText='✅ Saved: '+f.name+' - '+pdf.numPages+' pages. Daily Text is now AUTOMATIC.';
+      alert('✅ PDF Saved! Now Daily Text is AUTOMATIC. Close and open Daily Text again.');
+      showAutoDaily2();
+    }catch(e){
+      if(st) st.innerText='❌ Failed. Try another PDF (must be text PDF, not scanned photo).';
+      alert('Could not read PDF: '+e.message);
+    }
+  };
+  window.clearDailyPdf2=function(){
+    localStorage.removeItem('chipunka_daily_pdf_text');
+    localStorage.removeItem('chipunka_daily_pdf_name');
+    alert('PDF removed.');
+    showAutoDaily2();
+  };
+  // Keep old names working too
+  window.uploadDailyPdf=window.uploadDailyPdf2;
+  window.clearDailyPdf=window.clearDailyPdf2;
+
+  // --- 3. FIND TODAY ---
+  function findToday(){
+    let full=getK('chipunka_daily_pdf_text','');
+    if(!full) return null;
+    let now=new Date();
+    let months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    let monthName=months[now.getMonth()];
+    let day=now.getDate();
+    // Try many formats: "November 19", "19 November", "NOVEMBER 19", "Nov. 19"
+    let patterns=[monthName+' '+day, day+' '+monthName, monthName.toUpperCase()+' '+day, monthName.substring(0,3)+' '+day, monthName.substring(0,3)+'. '+day];
+    for(let pat of patterns){
+      let idx=full.toLowerCase().indexOf(pat.toLowerCase());
+      if(idx!==-1){
+        let snippet=full.substring(idx, idx+1000).replace(/---PAGE.*---/g,'').trim().substring(0,900);
+        return {date: monthName+' '+day, script: pat, text: snippet};
+      }
+    }
+    return null;
+  }
+
+  window.showAutoDaily2=function(){
+    let box=document.getElementById('dailyToday');
+    if(!box) return;
+    let auto=findToday();
+    if(auto){
+      box.innerHTML='<b>📖 TODAY - '+auto.date+' (Automatic from PDF ✅)</b><br><b style="font-size:18px">'+auto.script+'</b><br>'+auto.text+'<br><span class="small">From PDF: '+getK('chipunka_daily_pdf_name','')+'</span>';
+      return true;
+    }
+    return false;
+  };
+  window.showAutoDaily=window.showAutoDaily2;
+
+  // --- 4. STOP OLD FUNCTION FROM OVERWRITING ---
+  // Save original, then make new renderDaily that shows AUTO first
+  let originalRenderDaily = window.renderDaily;
+  window.renderDaily=function(){
+    // First, try auto
+    let hasAuto=showAutoDaily2();
+    if(hasAuto){
+      // Still render list below, but don't overwrite today box
+      let arr=getK('chipunka_daily',[]);
+      let l=document.getElementById('dailyList');
+      if(l) l.innerHTML = arr.map((x,i)=>`<div class="card">📖 <b>${x.date} - ${x.script}</b><br>${x.text}</div>`).join('') || '<p class="small">Automatic mode ON - Manual list empty</p>';
+      // Hide manual add form if PDF is ON? Keep it for backup
+      return;
+    }
+    // No PDF - use old manual
+    if(originalRenderDaily) originalRenderDaily();
+  };
+
+  // --- 5. KEEP CHECKING ---
+  setInterval(()=>{
+    forcePdfBox();
+    let tab=document.getElementById('tab-daily');
+    if(tab && !tab.classList.contains('hidden')){
+      // Only auto-refresh if PDF exists, so it doesn't flicker
+      if(getK('chipunka_daily_pdf_text','')) showAutoDaily2();
+    }
+    // Hide upload box for publishers - only Secretary sees upload
+    let who=document.getElementById('whoLine');
+    let isPub = who && who.innerText.includes('publisher');
+    let box=document.getElementById('dailyPdfBox');
+    if(box && isPub){
+      // Publishers see status only, not upload button
+      let btn=box.querySelector('button');
+      if(btn) btn.style.display='none';
+    }
+  }, 800);
+})();
 </script></body></html>
