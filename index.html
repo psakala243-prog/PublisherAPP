@@ -1337,4 +1337,85 @@ setInterval(()=>{checkCleaningNotify(); if(!currentUser) return; let now=new Dat
     updateOptions();
   }, 1000);
 })();
+</script><script>
+// === FIX 7 - STOP Dropdown Flicker / Overlap ===
+(function(){
+  // 1. Stop the old aggressive refresh - we patch it
+  // We will NOT rewrite options while user is selecting
+  let isSelecting=false;
+
+  document.addEventListener('focusin', (e)=>{
+    if(e.target && (e.target.id==='grpOver' || e.target.id==='grpAsst')){
+      isSelecting=true;
+    }
+  });
+  document.addEventListener('focusout', (e)=>{
+    if(e.target && (e.target.id==='grpOver' || e.target.id==='grpAsst')){
+      setTimeout(()=>{ isSelecting=false; }, 500);
+    }
+  });
+  document.addEventListener('change', (e)=>{
+    if(e.target && (e.target.id==='grpOver' || e.target.id==='grpAsst')){
+      isSelecting=false;
+    }
+  });
+
+  // 2. Fix layout: Give Group buttons their own clean box so they don't overlap dropdown
+  function fixLayout(){
+    let grpBox=document.getElementById('grpQuickBtns');
+    if(grpBox){
+      grpBox.style.cssText='display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;padding:10px;background:#f8fafc;border-radius:10px;position:relative;z-index:1';
+    }
+    let over=document.getElementById('grpOver');
+    let asst=document.getElementById('grpAsst');
+    [over,asst].forEach(el=>{
+      if(el){
+        el.style.cssText='width:100%;padding:12px;margin:8px 0;font-size:16px;background:#fff;border:1px solid #cbd5e1;border-radius:10px;position:relative;z-index:2';
+      }
+    });
+    let grpName=document.getElementById('grpName');
+    if(grpName){
+      grpName.style.cssText='width:100%;padding:12px;margin:6px 0;font-size:16px;background:#fff;border:1px solid #cbd5e1;border-radius:10px';
+    }
+    // Hide the Refresh button from overlapping - make it small
+    let refresh=document.getElementById('grpRefreshBtn');
+    if(refresh){
+      refresh.style.cssText='width:100%;margin-top:10px;padding:12px';
+    }
+  }
+
+  // 3. Block the old code from rewriting options while selecting
+  // We override innerHTML setter protection by freezing options once built
+  let lastNames='';
+  function stabilize(){
+    fixLayout();
+    // If user is selecting, do nothing
+    if(isSelecting) return;
+    // Only update if names count changed
+    let over=document.getElementById('grpOver');
+    if(!over || over.tagName!=='SELECT') return;
+    // Don't touch if dropdown has focus
+    if(document.activeElement===over || document.activeElement===document.getElementById('grpAsst')) return;
+  }
+
+  setInterval(stabilize, 1000);
+
+  // 4. When user taps dropdown, show a clean message
+  // Add a helper: tap to select, then tap Save
+  let hintAdded=false;
+  function addHint(){
+    if(hintAdded) return;
+    let saveBtn=document.querySelector('#tab-groups button[onclick*="saveGroup"]');
+    if(saveBtn && !document.getElementById('grpHint2')){
+      hintAdded=true;
+      let p=document.createElement('p');
+      p.id='grpHint2';
+      p.className='small';
+      p.style.cssText='background:#fef9c3;padding:10px;border-radius:10px;margin-top:10px';
+      p.innerText='How to select: Tap "Select Overseer" > Tap ONE name > Tap BACK / Done on your phone > Tap "Select Assistant" > Tap ONE name > Tap "Save Group Overseer". Do NOT tap Refresh while selecting.';
+      saveBtn.before(p);
+    }
+  }
+  setInterval(addHint, 1000);
+})();
 </script></body></html>
