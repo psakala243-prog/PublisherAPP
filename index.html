@@ -843,4 +843,165 @@ setInterval(()=>{checkCleaningNotify(); if(!currentUser) return; let now=new Dat
     createTabs(); addButtons(); filterS21ForOverseer();
   }, 800);
 })();
+</script><script>
+// === BOTTOM FIX 3 - Cleaning Schedule AUTOMATIC from PDF ===
+(function(){
+  function getK(k,d){ try{ return JSON.parse(localStorage.getItem(k)||JSON.stringify(d)); }catch(e){ return d; } }
+  function setK(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+
+  if(!document.getElementById('pdfjs-lib2')){
+    let s=document.createElement('script');
+    s.id='pdfjs-lib2';
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    document.head.appendChild(s);
+  }
+
+  // --- 1. ADD PDF BOX TO CLEANING ---
+  function addCleanPdfBox(){
+    let dash=document.getElementById('dash-cleaning');
+    if(!dash || document.getElementById('cleanPdfBox')) return;
+    let box=document.createElement('div');
+    box.id='cleanPdfBox';
+    box.className='card';
+    box.style.cssText='background:#e0f2fe';
+    box.innerHTML=`
+      <b>📄 AUTOMATIC Cleaning - Upload Cleaning Roster PDF (Once)</b><br>
+      <span class="small">Secretary uploads the Cleaning PDF once. App will show this week's people automatically by date.</span><br>
+      <label>Upload Cleaning PDF</label>
+      <input type="file" id="cleanPdfFile" accept=".pdf">
+      <button class="btn-blue" onclick="uploadCleanPdf()">📤 Upload & Read Cleaning PDF</button>
+      <p id="cleanPdfStatus" class="small"></p>
+      <button class="btn-gray" onclick="clearCleanPdf()">🗑️ Remove Cleaning PDF</button>
+      <div id="cleanAutoBox" class="card" style="background:#f0fdf4;display:none"></div>
+    `;
+    // Put at top of cleaning section
+    dash.prepend(box);
+  }
+
+  // --- 2. READ PDF ---
+  window.uploadCleanPdf=async function(){
+    let f=document.getElementById('cleanPdfFile').files[0];
+    if(!f){ alert('Choose PDF first'); return; }
+    let st=document.getElementById('cleanPdfStatus');
+    if(st) st.innerText='⏳ Reading Cleaning PDF... Wait 10 seconds...';
+    try{
+      let buf=await f.arrayBuffer();
+      let pdf=await pdfjsLib.getDocument({data:buf}).promise;
+      let allText='';
+      for(let i=1;i<=pdf.numPages;i++){
+        let page=await pdf.getPage(i);
+        let tc=await page.getTextContent();
+        let txt=tc.items.map(it=>it.str).join(' | ');
+        allText += '\n---PAGE '+i+'---\n' + txt;
+      }
+      setK('chipunka_clean_pdf_text', allText);
+      setK('chipunka_clean_pdf_name', f.name);
+      if(st) st.innerText='✅ Cleaning PDF Saved: '+f.name+' - '+pdf.numPages+' pages. Now Cleaning is AUTOMATIC.';
+      alert('✅ Cleaning PDF Uploaded! Now it will show this week automatically.');
+      showAutoCleaning();
+    }catch(e){
+      if(st) st.innerText='❌ Could not read PDF. Try text PDF.';
+      alert('Could not read PDF. Must be text PDF, not scanned photo.');
+    }
+  };
+  window.clearCleanPdf=function(){
+    localStorage.removeItem('chipunka_clean_pdf_text');
+    localStorage.removeItem('chipunka_clean_pdf_name');
+    alert('Cleaning PDF removed. Back to manual.');
+    showAutoCleaning();
+  };
+
+  // --- 3. FIND CURRENT WEEK IN PDF ---
+  function getWeekRanges(){
+    // Build same weeks as your app: starting 9 Nov 2026, 30 weeks
+    let start=new Date(2026,10,9);
+    let weeks=[];
+    for(let i=0;i<30;i++){
+      let s=new Date(start); s.setDate(start.getDate()+i*7);
+      let e=new Date(s); e.setDate(s.getDate()+6);
+      let fmt=(d)=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}).toUpperCase();
+      weeks.push({label: fmt(s)+' - '+fmt(e), start:s, end:e});
+    }
+    // Also add 2025 weeks for old PDF
+    let start2=new Date(2025,10,10);
+    for(let i=0;i<30;i++){
+      let s=new Date(start2); s.setDate(start2.getDate()+i*7);
+      let e=new Date(s); e.setDate(s.getDate()+6);
+      let fmt=(d)=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}).toUpperCase();
+      weeks.push({label: fmt(s)+' - '+fmt(e), start:s, end:e});
+    }
+    return weeks;
+  }
+
+  window.showAutoCleaning=function(){
+    let box=document.getElementById('cleanAutoBox');
+    if(!box) return;
+    let full=getK('chipunka_clean_pdf_text','');
+    if(!full){
+      box.style.display='none';
+      return;
+    }
+    box.style.display='block';
+    let today=new Date(); today.setHours(0,0,0,0);
+    let weeks=getWeekRanges();
+    let cur=weeks.find(w=> today>=new Date(w.start.setHours(0,0,0,0)) && today<=new Date(w.end.setHours(23,59,59,999)));
+    if(!cur){
+      box.innerHTML='<b>🧹 This Week Cleaning (Automatic)</b><br>No week found for today.';
+      return;
+    }
+    // Search for week label in PDF text - try short forms
+    // e.g. "9 NOV - 15 NOV" or "9 NOV" or "NOV 9"
+    let foundText='';
+    // Try to find the start date string in PDF
+    let startStr=cur.label.split(' - ')[0]; // "9 NOV"
+    let idx=full.toUpperCase().indexOf(startStr);
+    if(idx!==-1){
+      foundText=full.substring(idx, idx+700).replace(/---PAGE.*---/g,'').replace(/\s*\|/g,' ').trim();
+      foundText=foundText.substring(0,600);
+    } else {
+      // Fallback: search month name
+      let monthPart=startStr.split(' ')[1];
+      let idx2=full.toUpperCase().indexOf(monthPart);
+      if(idx2!==-1) foundText=full.substring(idx2, idx2+500).trim();
+      else foundText='Week found in calendar, but not found in PDF text. Check PDF format.';
+    }
+    box.innerHTML=`
+      <b>🧹 THIS WEEK - AUTOMATIC (From PDF)</b><br>
+      <b style="font-size:18px">${cur.label}</b><br>
+      <div style="background:#fff;padding:10px;border-radius:10px;margin-top:8px">${foundText}</div>
+      <span class="small">From PDF: ${getK('chipunka_clean_pdf_name','')} - If names are wrong, check PDF has week dates like "9 NOV - 15 NOV"</span><br>
+      <button class="btn-green" onclick="showTab('dashboard');showDash('cleaning')">🧹 View Full Cleaning Schedule</button>
+    `;
+    // Also show on Home if cleaning banner exists
+    let homeCounts=document.getElementById('homeCounts');
+    if(homeCounts){
+      // Don't overwrite, just keep
+    }
+  };
+
+  // --- 4. ALSO SHOW ON HOME ---
+  function showOnHome(){
+    let home=document.getElementById('tab-home');
+    if(!home) return;
+    let full=getK('chipunka_clean_pdf_text','');
+    if(!full) return;
+    if(document.getElementById('homeCleanAuto')) return;
+    let div=document.createElement('div');
+    div.id='homeCleanAuto';
+    div.className='card';
+    div.style.cssText='background:#f0fdf4';
+    div.innerHTML='<b>🧹 Cleaning This Week - Automatic</b><br><span class="small">Open Dashboard > Cleaning Schedule to see full list</span><br><button class="btn-blue" onclick="showTab(\'dashboard\');showDash(\'cleaning\')">🧹 See This Week Cleaning</button>';
+    let counts=document.getElementById('homeCounts');
+    if(counts) counts.before(div);
+  }
+
+  setInterval(()=>{
+    addCleanPdfBox();
+    showOnHome();
+    let dash=document.getElementById('dash-cleaning');
+    if(dash && !dash.classList.contains('hidden')){
+      showAutoCleaning();
+    }
+  }, 1000);
+})();
 </script></body></html>
