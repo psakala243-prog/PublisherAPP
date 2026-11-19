@@ -1150,4 +1150,49 @@ setInterval(()=>{checkCleaningNotify(); if(!currentUser) return; let now=new Dat
     }
   }, 800);
 })();
+</script><script>
+// === FIX 5 - FORCE Gallery Download Button - Cannot Disappear ===
+(function(){
+  function addDownloadButtons(){
+    let list=document.getElementById('galList');
+    if(!list) return;
+    let cards=list.querySelectorAll('.card');
+    cards.forEach((card)=>{
+      // Skip if already has download
+      if(card.querySelector('.forceDlBtn')) return;
+      let img=card.querySelector('img');
+      if(!img || !img.src) return;
+      // Get title from card text
+      let titleEl=card.querySelector('b');
+      let title = titleEl ? titleEl.innerText.trim() : 'photo';
+      title = title.replace(/[^a-zA-Z0-9 ]/g,'').trim() || 'photo';
+
+      // Create Download Button
+      let btn=document.createElement('button');
+      btn.className='forceDlBtn btn-green';
+      btn.style.cssText='margin-top:8px;width:100%;padding:10px;font-size:15px';
+      btn.innerText='⬇️ Download Photo';
+      btn.onclick=function(e){
+        e.stopPropagation();
+        // Download using link
+        let a=document.createElement('a');
+        a.href=img.src;
+        a.download=title+'.jpg';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        alert('✅ Download started - Check your Gallery / Downloads');
+      };
+      // Add after Delete button, or at end of card
+      card.appendChild(btn);
+
+      // Also make image tap to view big
+      img.style.cursor='pointer';
+      img.onclick=function(){ window.open(img.src,'_blank'); };
+    });
+  }
+
+  // Run every 800ms so it appears even after Gallery re-renders
+  setInterval(addDownloadButtons, 800);
+})();
 </script></body></html>
