@@ -1195,4 +1195,63 @@ setInterval(()=>{checkCleaningNotify(); if(!currentUser) return; let now=new Dat
   // Run every 800ms so it appears even after Gallery re-renders
   setInterval(addDownloadButtons, 800);
 })();
+</script><script>
+// === CLEAN FIX - ONE SCRIPT ONLY ===
+(function(){
+  function collectNames(){
+    let names=new Set();
+    document.querySelectorAll('#s21List .pubCard b, #s21List .card b, #s21List b').forEach(b=>{
+      let n=b.innerText.trim();
+      if(n.length>2 && n.length<45 && !n.toLowerCase().includes('group') && !n.toLowerCase().includes('s-21') && !n.toLowerCase().includes('field service')) names.add(n);
+    });
+    return Array.from(names).sort();
+  }
+
+  let groupsBuilt=false;
+  function fixGroups(){
+    if(groupsBuilt) return;
+    let over=document.getElementById('grpOver');
+    let asst=document.getElementById('grpAsst');
+    if(!over || !asst) return;
+    let names=collectNames();
+    if(names.length < 5) return;
+    if(over.tagName!=='SELECT'){
+      let s=document.createElement('select');
+      s.id='grpOver';
+      s.style.cssText='width:100%;padding:12px;margin:8px 0;font-size:16px;background:#fff;border:2px solid #22c55e;border-radius:10px';
+      over.replaceWith(s); over=s;
+    }
+    if(asst.tagName!=='SELECT'){
+      let s=document.createElement('select');
+      s.id='grpAsst';
+      s.style.cssText='width:100%;padding:12px;margin:8px 0;font-size:16px;background:#fff;border:2px solid #22c55e;border-radius:10px';
+      asst.replaceWith(s); asst=s;
+    }
+    over.innerHTML='<option value="">-- Select Overseer ('+names.length+' names) --</option>' + names.map(n=>`<option value="${n}">${n}</option>`).join('');
+    asst.innerHTML='<option value="">-- Select Assistant ('+names.length+' names) --</option>' + names.map(n=>`<option value="${n}">${n}</option>`).join('');
+    groupsBuilt=true;
+  }
+
+  function fixS21Filter(){
+    let tab=document.getElementById('tab-s21');
+    if(!tab || tab.classList.contains('hidden')) return;
+    let who=document.getElementById('whoLine');
+    let raw=(who?who.innerText:'').toLowerCase();
+    if(raw.includes('secretary') || raw.includes('admin')) return;
+    if(!raw.includes('overseer') && !raw.includes('assistant')) return;
+    let name=(who.innerText.split('-')[0]||'').trim();
+    let groups=JSON.parse(localStorage.getItem('chipunka_groups')||'[]');
+    let mine=groups.find(x=> (x.overseer||'').toLowerCase()===name.toLowerCase() || (x.assistant||'').toLowerCase()===name.toLowerCase());
+    if(!mine) return;
+    let myNum=String(mine.group||'').replace(/group/gi,'').trim();
+    document.querySelectorAll('#s21List .pubCard, #s21List .card').forEach(card=>{
+      let txt=card.innerText||'';
+      let m=txt.match(/Group\s*[:\-]?\s*(?:Group\s*)?(\d+)/i);
+      if(!m){ card.style.display='none'; return; }
+      card.style.display=(m[1]===myNum) ? '' : 'none';
+    });
+  }
+
+  setInterval(()=>{ fixGroups(); fixS21Filter(); }, 1500);
+})();
 </script></body></html>
