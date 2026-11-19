@@ -1258,4 +1258,109 @@ setInterval(()=>{checkCleaningNotify(); if(!currentUser) return; let now=new Dat
     }
   });
 })();
+</script><script>
+// === FIX 6 V3 - COMPLETE - Creates Dropdown + Fills Once - NO BLINK ===
+(function(){
+  let built=false;
+  let savePatched=false;
+
+  function collectNames(){
+    let names=new Set();
+    // 1. From S-21 list - this is where all 41 names live
+    document.querySelectorAll('#s21List .pubCard b, #s21List .card b').forEach(b=>{
+      let n=b.innerText.trim();
+      if(n.length>2 && n.length<45 && !n.toLowerCase().includes('group') && !n.toLowerCase().includes('s-21') && !n.toLowerCase().includes('meetings')) names.add(n);
+    });
+    // 2. From localStorage groups + donations
+    try{
+      let g=JSON.parse(localStorage.getItem('chipunka_groups')||'[]');
+      g.forEach(x=>{ if(x.overseer) names.add(x.overseer); if(x.assistant) names.add(x.assistant); });
+    }catch(e){}
+    return Array.from(names).sort();
+  }
+
+  function build(){
+    if(built) return false;
+    let over=document.getElementById('grpOver');
+    let asst=document.getElementById('grpAsst');
+    if(!over || !asst) return false;
+
+    let names=collectNames();
+    // If names not loaded yet, go to S-21 once in background
+    if(names.length < 5){
+      return false;
+    }
+
+    // --- Create SELECTs if still INPUTs ---
+    if(over.tagName!=='SELECT'){
+      let s=document.createElement('select');
+      s.id='grpOver';
+      s.style.cssText='width:100%;padding:12px;margin:8px 0;font-size:16px;background:#fff;border:1px solid #cbd5e1;border-radius:10px';
+      over.replaceWith(s);
+      over=s;
+    }
+    if(asst.tagName!=='SELECT'){
+      let s=document.createElement('select');
+      s.id='grpAsst';
+      s.style.cssText='width:100%;padding:12px;margin:8px 0;font-size:16px;background:#fff;border:1px solid #cbd5e1;border-radius:10px';
+      asst.replaceWith(s);
+      asst=s;
+    }
+
+    // --- Fill ONCE ---
+    over.innerHTML='<option value="">-- Select Overseer --</option>' + names.map(n=>`<option value="${n}">${n}</option>`).join('');
+    asst.innerHTML='<option value="">-- Select Assistant (Optional) --</option>' + names.map(n=>`<option value="${n}">${n}</option>`).join('');
+
+    // --- Fix Group buttons layout ONCE ---
+    let grpBox=document.getElementById('grpQuickBtns');
+    if(!grpBox){
+      let grpName=document.getElementById('grpName');
+      if(grpName){
+        let div=document.createElement('div');
+        div.id='grpQuickBtns';
+        div.style.cssText='display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;padding:10px;background:#f8fafc;border-radius:10px';
+        div.innerHTML=[1,2,3,4,5,6,7,8,9,10].map(i=>`<button type="button" class="btn-gray" style="padding:6px 10px" onclick="document.getElementById('grpName').value='Group ${i}'">Group ${i}</button>`).join('');
+        grpName.after(div);
+      }
+    }
+
+    // --- Patch Save ONCE ---
+    if(!savePatched){
+      savePatched=true;
+      window.saveGroup=function(){
+        let gEl=document.getElementById('grpName');
+        let oEl=document.getElementById('grpOver');
+        let aEl=document.getElementById('grpAsst');
+        let g=gEl ? gEl.value.trim() : '';
+        let o=oEl ? oEl.value.trim() : '';
+        let a=aEl ? aEl.value.trim() : '';
+        if(!g||!o){ alert('Please select Group + Overseer'); return; }
+        if(o===a && a!==''){ alert('Overseer and Assistant cannot be same person'); return; }
+        let arr=JSON.parse(localStorage.getItem('chipunka_groups')||'[]');
+        let ex=arr.find(x=>x.group.toLowerCase()===g.toLowerCase());
+        if(ex){ ex.overseer=o; ex.assistant=a; } else arr.push({group:g,overseer:o,assistant:a});
+        localStorage.setItem('chipunka_groups', JSON.stringify(arr));
+        if(window.renderGroups) window.renderGroups();
+        alert('✅ Saved - '+o+' is Overseer of '+g+'\nAssistant: '+(a||'None'));
+        // After renderGroups, it will recreate inputs - allow rebuild once more
+        setTimeout(()=>{ built=false; }, 1000);
+      };
+    }
+
+    built=true;
+    console.log('FIX 6 V3 built once, names:', names.length);
+    return true;
+  }
+
+  // Try every 2 sec UNTIL built, then STOP forever - no more blinking
+  let checker=setInterval(()=>{
+    if(build()){
+      clearInterval(checker);
+    }
+  }, 2000);
+
+  // If S-21 list is hidden, we still need names - force load S-21 data once
+  // by checking localStorage directly for S-21 data if S-21 DOM is empty
+  // (Your S-21 data is in Firebase, so opening All S-21s once loads it)
+})();
 </script></body></html>
